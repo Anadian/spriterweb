@@ -1,4 +1,4 @@
-NAME=$(basename $(notdir $(wildcard ./*.md)))
+NAME=spriterweb
 ifeq ($(shell uname -s),Darwin)
 $(info Building for Mac OSX)
 PLATFORM=MacOSX
@@ -87,8 +87,8 @@ freshrun: clean run
 freshinstall: clean all install
 	
 push:
-	git add $(SOURCE) ./Makefile $(NAME).md
+	git add --all .
 	git commit -m 'Lazy build message.'
-	git push https://bitbucket.org/Anadian/$(NAME) master
+	git push https://github.com/Anadian/$(NAME) master
 pull:
-	git pull https://bitbucket.org/Anadian/$(NAME)
+	git pull https://github.com/Anadian/$(NAME)
