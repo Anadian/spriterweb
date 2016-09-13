@@ -39,10 +39,10 @@ signed short printl(unsigned short priority, char *fmt,...){
 	if(priority <= Configuration.debug.verbosity){
 		char Buffer[256];
 		strcpy(&Buffer,fmt);
-		printf("%s\n", Buffer);
+		//printf("%s\n", Buffer);
 		FILE *logfile = fopen(&(Delog.filename), "a");
-		if(logfile != NULL) printf("logfile open\n");
-		else printf("logfile closed\n");
+		/*if(logfile != NULL) printf("logfile open\n");
+		else printf("logfile closed\n");*/
 		va_list args;
 		va_start(args, fmt);
 		/*char format[256];
@@ -92,6 +92,7 @@ signed short printl(unsigned short priority, char *fmt,...){
 			 i++;
 		}
 		va_end(args);
+		fputs("\n", logfile);
 		fclose(logfile);
 	}
 	return 0;

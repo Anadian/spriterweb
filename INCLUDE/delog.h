@@ -18,6 +18,7 @@ extern "C" {
 #elif USE_GLFW3
 #define BUILD_NAME "GLFW3/OpenGL Thing"
 #endif
+#define BUILD_NAME "test"
 
 #define VERSION_MAJOR 1
 #define VERSION_MINOR 0

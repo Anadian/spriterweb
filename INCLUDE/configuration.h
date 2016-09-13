@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#include <stdio.h>
+//#include <stdio.h>
 
 typedef struct ConfigurationVideo_struct {unsigned long xpos;
 	unsigned long ypos;
@@ -22,6 +22,7 @@ typedef struct ConfigurationAudio_struct {unsigned short bgmvolume;
 typedef struct ConfigurationInterface_strcut {float initialselectionchangedelay;
 	float selectionchangerate;} ConfigurationInterface_type;
 typedef struct ConfigurationControls_struct {
+	float joystickdeadzone; //0.125
 	unsigned short thirdpersoncameraspeed;
 	unsigned short thirdpersoncamerax;
 	unsigned short thirdpersoncameray;

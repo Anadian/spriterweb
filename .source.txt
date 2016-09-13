@@ -1,0 +1,10 @@
+BIN
+CONFIG
+INCLUDE
+LOG
+MISC
+Makefile
+OBJECTS
+SOURCE
+inih
+script.pl

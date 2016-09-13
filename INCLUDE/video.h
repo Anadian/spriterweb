@@ -16,13 +16,13 @@ extern "C" {
 
 #elif USE_GLFW3
 #include <GLFW/glfw3.h>
-#include <IL/il.h>
-#include <IL/ilu.h>
-#include <IL/ilut.h> //ResIL Libraries
-//#include "vertexarray.h"
-//#include "vertexbuffer.h"
-//#include "shader.h"
+
 #endif
+#if USE_TIGR
+#include "tigr.h"
+#endif
+
+
 
 int InitVideo();
 
@@ -34,6 +34,12 @@ GLFWwindow *CreateWindow(char *title, int xpos, int ypos, int width, int height,
 void DestroyWindow(GLFWwindow *subwindow);
 
 GLFWwindow *GetWindow();
+
+#endif
+#if USE_TIGR
+Tigr *CreateWindow(char *title, int xpod, int ypos, int width, int height, int fullscreen);
+void DestroyWindow(Tigr *subwindow);
+Tigr *GetWindow();
 #endif
 
 int Video();

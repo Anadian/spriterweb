@@ -1,0 +1,12 @@
+SOURCE/actions.c
+SOURCE/camera.c
+SOURCE/camera_input.c
+SOURCE/cli.c
+SOURCE/configuration.c
+SOURCE/delog.c
+SOURCE/ini.c
+SOURCE/input.c
+SOURCE/kairos.c
+SOURCE/logic_main.c
+SOURCE/main.c
+SOURCE/video.c

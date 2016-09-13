@@ -4,9 +4,9 @@
 
 #include "state.h"
 
-int CameraInput(){
+/*int CameraInput(){
 	if(CriticalVariables.ModeState == OPENGL_TEST){
 		//
 	}
 	return 0;
-}
+}*/

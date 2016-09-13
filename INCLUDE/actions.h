@@ -8,9 +8,9 @@ extern "C" {
 #endif
 
 typedef struct Action_struct {signed long state;
-	char *primary;
-	char *secondary;
-	char *tertiary;} Action_type;
+	char primary[16];
+	char secondary[16];
+	char tertiary[16];} Action_type;
 	
 typedef struct Actions_struct {
 	Action_type PointUp;
@@ -23,7 +23,11 @@ typedef struct Actions_struct {
 
 Actions_type Actions;
 
+int ProcessActions();
+
 int LoadActions(char *actionsfilename);
+int SaveActions(char *actionsfilename);
+int CreateNewActions(char *actionsfilename);
 
 #ifdef __cplusplus
 }

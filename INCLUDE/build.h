@@ -4,7 +4,11 @@
 #define BUILD_H
 
 #define USE_SDL2 0
-#define USE_GLFW3 1
+#define USE_GLFW3 0
+#define USE_TIGR 1
+#define ALLOW_PRINTF 1
+#define BUILD_FOR_BINARY 1
+#define BUILD_FOR_LIBRARY 0
 
 typedef unsigned char u8;
 typedef signed char s8;

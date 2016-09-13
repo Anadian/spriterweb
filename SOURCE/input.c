@@ -1,7 +1,13 @@
 // input.c
 #include "input.h"
 #include <stdio.h>
-#include "video.h"
+#include "video.h" //GetWindow
+#include "actions.h"
+#include <string.h> //strcpy
+#include "state.h"
+#include <stdlib.h> //abs
+#include "configuration.h" //joystickdeadzone
+#include "delog.h"
 
 #if USE_SDL2
 
@@ -11,18 +17,45 @@
 
 GLFWwindow *window_ptr;
 void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
+void MouseButtonCallback(GLFWwindow *windoww, int button, int action, int mods);
+unsigned char oldbuttons[32];
+
+#elif USE_TIGR
+
+Tigr *window_ptr;
+#include "gamepad/Gamepad.h"
+typedef struct Gamepad_device Gamepad;
+void DownCallback(Gamepad *device, int buttonID, double timestamp, void *context);
+void UpCallback(Gamepad *device, int buttonID, double timestamp, void *context);
+void AxesCallback(Gamepad *device, int axisID, float value, float lastValue, double timestamp, void *context);
+int SKFromTK(int tk);
+char CharFromSK(int sk);
+int SKFromChar(char c);
+int TKFromSK(int sk);
 
 #endif
 
-#include <stdio.h>
-#include "state.h"
-
 int InitInput(){
+	InputAddReference = 0;
+	InputReadReference = 0;
+	int printplace = 0;
+	int i;
+	for(i = 0; i < INPUTEVENT_BUFFER_SIZE; i++){
+		InputEvent[i].type = 0;
+	}
 #if USE_GLFW3
 
 	window_ptr = GetWindow();
 	glfwSetKeyCallback(window_ptr, KeyCallback);
+	glfwSetMouseButtonCallback(window_ptr, MouseButtonCallback);
 
+#elif USE_TIGR
+	for(i = 0; i < 105; i++) Keys[i] = 0;
+	window_ptr = GetWindow();
+	Gamepad_buttonDownFunc(DownCallback,NULL);
+	Gamepad_buttonUpFunc(UpCallback,NULL);
+	Gamepad_axisMoveFunc(AxesCallback,NULL);
+	Gamepad_init();
 #endif
 	return 0;
 }
@@ -45,29 +78,194 @@ int Input(){
 	if(glfwWindowShouldClose(window_ptr)){
 		CriticalVariables.AppRunning = 0;
 	}
+	int i;
+	for(i = 0; i < 16; i++){
+		if(glfwJoystickPresent(i)){
+			float *axes;
+			int count;
+			axes = glfwGetJoystickAxes(i,&count);
+			int j;
+			for(j = 0; j < count; j++){
+				if(abs(axes[j]) > Configuration.controls.joystickdeadzone){
+					InputEvent_type Event;
+					Event.type = 2;
+					Event.value = axes[j];
+					sprintf(Event.code, "J%dA%d", i, j);
+					Event.time = glfwGetTime();
+					InputAddEvent(Event);
+				}
+			}
+			unsigned char *buttons;
+			buttons = glfwGetJoystickButtons(i,&count);
+			for(j = 0; j < count; j++){
+				if(buttons[j] != oldbuttons[j]){ 
+					InputEvent_type Event;
+					Event.type = 3;
+					if(buttons[j] == GLFW_PRESS) Event.value = 1;
+					else if(buttons[j] == GLFW_RELEASE) Event.value = -1;
+					sprintf(Event.code, "J%dB%d", i, j);
+					Event.time = glfwGetTime();
+					InputAddEvent(Event);
+				}
+				oldbuttons[j] = buttons[j];
+			}
+		}
+		//for(i = 0; i < 8; i++
+	}
+					 
+	ProcessActions();
+#elif USE_TIGR
+	if(tigrClosed(window_ptr)) CriticalVariables.AppRunning = 0;
+	//if(tigrKeyHeld(window_ptr,TK_SPACE)) tigrPrint(window_ptr, tfont, 0, 0, tigrRGB(255,0,0), "Space is held");
+	unsigned char i;
+	for(i = '0'; i <= '9'; i++){
+		if(tigrKeyHeld(window_ptr,i) != Keys[i-48]){
+			if(tigrKeyHeld(window_ptr,i)){ //Pressed
+				InputEvent_type Event;
+				Event.type = 1;
+				Event.value = 1;
+				sprintf(Event.code, "K%d", i);
+				Event.time = tigrTime();
+				InputAddEvent(Event);
+				Keys[i-48] = 1;
+			}
+			else{ //Released
+				InputEvent_type Event;
+				Event.type = 1;
+				Event.value = -1;
+				sprintf(Event.code, "K%d", i);
+				Event.time = tigrTime();
+				InputAddEvent(Event);
+				Keys[i-48] = 0;
+			}
+		}
+	}
+	for(i = 'A'; i <= 'Z'; i++){
+		if(tigrKeyHeld(window_ptr,i) != Keys[i-55]){
+			if(tigrKeyHeld(window_ptr,i)){ //Pressed
+				//TextBufferAdd(i);
+				InputEvent_type Event;
+				Event.type = 1;
+				Event.value = -1;
+				sprintf(Event.code, "K%d", i);
+				Event.time = tigrTime();
+				InputAddEvent(Event);
+				Keys[i-55] = 1;
+			}
+			else{ //Released
+				InputEvent_type Event;
+				Event.type = 1;
+				Event.value = -1;
+				sprintf(Event.code, "K%d", i);
+				Event.time = tigrTime();
+				InputAddEvent(Event);
+				Keys[i-55] = 0;
+			}
+		}
+	}
+	for(i = 128; i <= 197; i++){
+		if(tigrKeyHeld(window_ptr,i) != Keys[i-92]){
+			if(tigrKeyHeld(window_ptr,i)){ //Pressed
+				InputEvent_type Event;
+				Event.type = 1;
+				Event.value = 1;
+				sprintf(Event.code, "K%d", i);
+				Event.time = tigrTime();
+				InputAddEvent(Event);
+				Keys[i-92] = 1;
+			}
+			else{ //Released
+				InputEvent_type Event;
+				Event.type = 1;
+				Event.value = -1;
+				sprintf(Event.code, "K%d", i);
+				Event.time = tigrTime();
+				InputAddEvent(Event);
+				Keys[i-92] = 0;
+			}
+		}
+	}
+	Gamepad_processEvents();
+	Gamepad_detectDevices();
+	ProcessActions();
+	LastUnicode = tigrReadChar(window_ptr);
 #endif
 	return 0;
 }
+int QuitInput(){
+	Gamepad_shutdown();
+	return 0;
+}
+int InputAddEvent(InputEvent_type Event){
+	printl(4, "Added event %s to %d\t", Event.code, InputAddReference);
+	printf("Added event %s to %d\t", Event.code, InputAddReference);
+	if(Event.type != NULL){
+		InputEvent[InputAddReference] = Event;
+		InputAddReference++;
+		if(InputAddReference == INPUTEVENT_BUFFER_SIZE) InputAddReference = 0;
+		return 1;
+	}
+	if(InputAddReference == INPUTEVENT_BUFFER_SIZE) InputAddReference = 0;
+	return 0;
+}
+int InputGetEvent(InputEvent_type *Event){
+	if(InputEvent[InputReadReference].type != 0){
+		Event->type = InputEvent[InputReadReference].type;
+		Event->value = InputEvent[InputReadReference].value;
+		Event->time = InputEvent[InputReadReference].time;
+		strcpy(Event->code,InputEvent[InputReadReference].code);
+		InputEvent[InputReadReference].type = 0;
+		printl(4, "Read event %s from %d\n", Event->code, InputReadReference);
+		printf("Read event %s from %d\n", Event->code, InputReadReference);
+		InputReadReference++;
+		if(InputReadReference == INPUTEVENT_BUFFER_SIZE) InputReadReference = 0;
+		return 1;
+	}else if(InputReadReference != InputAddReference) InputReadReference++;
+	if(InputReadReference == INPUTEVENT_BUFFER_SIZE) InputReadReference = 0;
+	return 0;
+}
+	
 
 #if USE_GLFW3
 void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods){
 	if(action == GLFW_PRESS){
-		printf("key: %d + %d at %f\n", key, mods, glfwGetTime());
-		/*switch(key){
-			case GLFW_KEY_UP: Asteriods_Thrust = 1; break;
-			case GLFW_KEY_LEFT: Asteriods_TurnLeft = 1; break;
-			case GLFW_KEY_RIGHT: Asteriods_TurnRight = 1; break;
-		}*/
+		//printf("key: %d + %d at %f\n", key, mods, glfwGetTime());
+		InputEvent_type Event;
+		Event.type = 1;
+		Event.value = 1;
+		sprintf(Event.code, "K%d+%d", key, mods);
+		//printf("Event.code: %s\n", Event.code);
+		Event.time = glfwGetTime();
+		InputAddEvent(Event);
 		
 	}
 	else if(action == GLFW_RELEASE){
-		/*switch(key){
-			case GLFW_KEY_UP: Asteriods_Thrust = 0; break;
-			case GLFW_KEY_LEFT: Asteriods_TurnLeft = 0; break;
-			case GLFW_KEY_RIGHT: Asteriods_TurnRight = 0; break;
-		}*/
+		InputEvent_type Event;
+		Event.type = 1;
+		Event.value = -1;
+		sprintf(Event.code, "K%d+%d", key, mods);
+		Event.time = glfwGetTime();
+		InputAddEvent(Event);
 	}
 }
+void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods){
+	if(action == GLFW_PRESS){
+		InputEvent_type Event;
+		Event.type = 4;
+		Event.value = 1;
+		sprintf(Event.code, "M%d+%d", button, mods);
+		Event.time = glfwGetTime();
+		InputAddEvent(Event);
+	}
+	else if(action == GLFW_RELEASE){
+		InputEvent_type Event;
+		Event.type = 4;
+		Event.value = -1;
+		sprintf(Event.code, "M%d+%d", button, mods);
+		InputAddEvent(Event);
+	}
+}
+		
 
 char *ASCIIFromGLFW3Key(int key){ //Returns to 16 byte buffer.
 	if(key > 32 && key < 97) return (char)key;
@@ -221,4 +419,164 @@ char *ASCIIFromGLFW3Key(int key){ //Returns to 16 byte buffer.
 }
 //int GLFW3KeyFromASCII(char *ascii){
 	
+#elif USE_TIGR
+void DownCallback(Gamepad *device, int buttonID, double timestamp, void *context){
+	//tigrPrint(window_ptr, tfont, 0, (printplace % 30)*16, tigrRGB(255,0,0), "Button %d pressed", buttonID);
+	InputEvent_type Event;
+	Event.type = 3;
+	Event.value = 1;
+	sprintf(Event.code, "J%dB%d", device->deviceID, buttonID);
+	Event.time = timestamp;
+	InputAddEvent(Event);
+}
+void UpCallback(Gamepad *device, int buttonID, double timestamp, void *context){
+	//tigrPrint(window_ptr, tfont, 0, (printplace % 30)*16, tigrRGB(0,255,0), "Button %d released, buttonID", buttonID);
+	InputEvent_type Event;
+	Event.type = 3;
+	Event.value = -1;
+	sprintf(Event.code, "J%dB%d", device->deviceID, buttonID);
+	Event.time = timestamp;
+	InputAddEvent(Event);
+}
+void AxesCallback(Gamepad *device, int axisID, float value, float lastValue, double timestamp, void *context){
+	//tigrPrint(window_ptr, tfont, 0, (printplace % 30)*16, tigrRGB(0,0,255), "Axis %d has value %f", axisID, value);
+	InputEvent_type Event;
+	Event.type = 2;
+	Event.value = value;
+	sprintf(Event.code, "J%dA%d", device->deviceID, axisID);
+	Event.time = timestamp;
+	InputAddEvent(Event);
+}
+char *ASCIIFromSK(int sk){
+	char string[10];
+	if(sk < 10) strcpy(string,CharFromSK(sk));
+	else if(sk < 36) strcpy(string,CharFromSK(sk));
+	else{
+		switch(sk + 92){
+			case TK_PAD0: return "[PAD0]"; break;
+			case TK_PAD1: return "[PAD1]"; break;
+			case TK_PAD2: return "[PAD2]"; break;
+			case TK_PAD3: return "[PAD3]"; break;
+			case TK_PAD4: return "[PAD4]"; break;
+			case TK_PAD5: return "[PAD5]"; break;
+			case TK_PAD6: return "[PAD6]"; break;
+			case TK_PAD7: return "[PAD7]"; break;
+			case TK_PAD8: return "[PAD8]"; break;
+			case TK_PAD9: return "[PAD9]"; break;
+			case TK_PADMUL: return "[PADMUL]"; break;
+			case TK_PADADD: return "[PADADD]"; break;
+			case TK_PADENTER: return "[PADENTER]"; break;
+			case TK_PADSUB: return "[PADSUB]"; break;
+			case TK_PADDOT: return "[PADDOT]"; break;
+			case TK_PADDIV: return "[PADDIV]"; break;
+			case TK_F1: return "[F1]"; break;
+			case TK_F2: return "[F2]"; break;
+			case TK_F3: return "[F3]"; break;
+			case TK_F4: return "[F4]"; break;
+			case TK_F5: return "[F5]"; break;
+			case TK_F6: return "[F6]"; break;
+			case TK_F7: return "[F7]"; break;
+			case TK_F8: return "[F8]"; break;
+			case TK_F9: return "[F9]"; break;
+			case TK_F10: return "[F10]"; break;
+			case TK_F11: return "[F11]"; break;
+			case TK_F12: return "[F12]"; break;
+			case TK_BACKSPACE: return "[BACKSPACE]"; break;
+			case TK_TAB: return "[TAB]"; break;
+			case TK_RETURN: return "[RETURN]"; break;
+			case TK_SHIFT: return "[SHIFT]"; break;
+			case TK_CONTROL: return "[CONTROL]"; break;
+			case TK_ALT: return "[ALT]"; break;
+			case TK_PAUSE: return "[PAUSE]"; break;
+			case TK_CAPSLOCK: return "[CAPSLOCK]"; break;
+			case TK_ESCAPE: return "[ESCAPE]"; break;
+			case TK_SPACE: return "[SPACE]"; break;
+			case TK_PAGEUP: return "[PAGEUP]"; break;
+			case TK_PAGEDN: return "[PAGEDN]"; break;
+			case TK_END: return "[END]"; break;
+			case TK_HOME: return "[HOME]"; break;
+			case TK_LEFT: return "[LEFT]"; break;
+			case TK_UP: return "[UP]"; break;
+			case TK_RIGHT: return "[RIGHT]"; break;
+			case TK_DOWN: return "[DOWN]"; break;
+			case TK_INSERT: return "[INSERT]"; break;
+			case TK_DELETE: return "[DELETE]"; break;
+			case TK_LWIN: return "[LWIN]"; break;
+			case TK_RWIN: return "[RWIN]"; break;
+			case TK_NUMLOCK: return "[NUMLOCK]"; break;
+			case TK_SCROLL: return "[SCROLL]"; break;
+			case TK_LSHIFT: return "[LSHIFT]"; break;
+			case TK_RSHIFT: return "[RSHIFT]"; break;
+			case TK_LCONTROL: return "[LCONTROL]"; break;
+			case TK_RCONTROL: return "[RCONTROL]"; break;
+			case TK_LALT: return "[LALT]"; break;
+			case TK_RALT: return "[RALT]"; break;
+			case TK_SEMICOLON: return "[SEMICOLON]"; break;
+			case TK_EQUALS: return "[EQUALS]"; break;
+			case TK_COMMA: return "[COMMA]"; break;
+			case TK_MINUS: return "[MINUS]"; break;
+			case TK_DOT: return "[DOT]"; break;
+			case TK_SLASH: return "[SLASH]"; break;
+			case TK_BACKTICK: return "[BACKTICK]"; break;
+			case TK_LSQUARE: return "[LSQUARE]"; break;
+			case TK_BACKSLASH: return "[BACKSLASH]"; break;
+			case TK_RSQUARE: return "[RSQUARE]"; break;
+			case TK_TICK: return "[TICK]"; break;
+		}
+	}
+}
+int SKFromTK(int tk){
+	if(tk < 58) return (tk - 48);
+	else if(tk < 91) return (tk-64);
+	else return(tk-92);
+}
+char CharFromSK(int sk){
+	if(sk < 10) return (sk + 48);
+	else if(sk < 36) return (sk + 65);
+	else switch(sk){
+		case 64: return 8; break;
+		case 65: return '\t'; break;
+		case 66: return '\n'; break;
+		case 73: return ' '; break;
+		case 94: return ';'; break;
+		case 95: return '='; break;
+		case 96: return ','; break;
+		case 97: return '-'; break;
+		case 98: return '.'; break;
+		case 99: return '/'; break;
+		case 100: return '`'; break;
+		case 101: return '['; break;
+		case 102: return '\\'; break;
+		case 103: return ']'; break;
+		case 104: return '\''; break; 
+		default: return '\0'; break;
+	}
+}
+int SKFromChar(char c){
+	if(c < 58 && c >= 48) return (c - 48);
+	else if(c < 91 && c >= 65) return (c - 65);
+	else switch(c){
+		case 8: return 64; break;
+		case '\t': return 65; break;
+		case '\n': return 66; break;
+		case ' ': return 73; break;
+		case ';': return 94; break;
+		case '=': return 95; break;
+		case ',': return 96; break;
+		case '-': return 97; break;
+		case '.': return 98; break;
+		case '/': return 99; break;
+		case '`': return 100; break;
+		case '[': return 101; break;
+		case '\\': return 102; break;
+		case ']': return 103; break;
+		case '\'': return 104; break; 
+		default: return 0; break;
+	}
+}
+int TKFromSK(int sk){
+	if(sk < 10 && sk >= 0) return (sk + 48);
+	else if(sk < 36 && sk >= 10) return (sk + 65);
+	else return (sk + 128);
+}
 #endif

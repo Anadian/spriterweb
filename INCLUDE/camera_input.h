@@ -9,7 +9,7 @@ extern "C" {
 
 #include "camera.h"
 
-int CameraInput();
+//int CameraInput();
 
 #ifdef __cplusplus
 }

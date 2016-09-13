@@ -2,6 +2,7 @@
 #include "configuration.h"
 
 #include "ini.h"
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -26,7 +27,8 @@ static int handler(void* user, const char* section, const char* name, const char
 		if(strcmp(name,"initialselectionchangedelay") == 0) pconfig->interface.initialselectionchangedelay = atof(value);
 		else if(strcmp(name,"selectionchangerate") == 0) pconfig->interface.selectionchangerate = atof(value);
 	} else if(strcmp(section,"controls") == 0){
-		if(strcmp(name,"thirdpersoncameraspeed") == 0) pconfig->controls.thirdpersoncameraspeed = atol(value);
+		if(strcmp(name,"joystickdeadzone") == 0) pconfig->controls.joystickdeadzone = atof(value);
+		else if(strcmp(name,"thirdpersoncameraspeed") == 0) pconfig->controls.thirdpersoncameraspeed = atol(value);
 		else if(strcmp(name,"thirdpersoncamerax") == 0) pconfig->controls.thirdpersoncamerax = atol(value);
 		else if(strcmp(name,"thridpersoncameray") == 0) pconfig->controls.thirdpersoncameray = atol(value);
 		else if(strcmp(name,"firstpersoncameraspeed") == 0) pconfig->controls.firstpersoncameraspeed = atol(value);
@@ -74,6 +76,8 @@ int SaveConfiguration(char *configfilename){
 	sprintf(buffer, "selectionchangerate=%f\t;The rate at which the selection cursor on a menu moves (represented as time, in seconds, between changes here) once the cursor as entered continuous movement.\n", Configuration.interface.selectionchangerate);
 	fputs(buffer, configfile);
 	fputs("[controls]\n",configfile);
+	sprintf(buffer, "joystickdeadzone=%f\t;A floating-point value [0.000,1.000] with 0.00 meaning no deadzone and 1.000 being peak.\n", Configuration.controls.joystickdeadzone);
+	fputs(buffer, configfile);
 	sprintf(buffer, "thirdpersoncameraspeed=%d\t;The speed at which the camera moves while in a third person view. 0 being the slowest and 10 being the fastest.\n", Configuration.controls.thirdpersoncameraspeed);
 	fputs(buffer, configfile);
 	sprintf(buffer, "thirdpersoncamerax=%d\t;Determines whether the x-axis of the camera is inverted while in a third person view. 0 for \"normal\" and 1 for inverted.\n", Configuration.controls.thirdpersoncamerax);
@@ -157,6 +161,8 @@ int CreateNewConfiguration(char *configfilename){
 	sprintf(buffer, "selectionchangerate=%f\t;The rate at which the selection cursor on a menu moves (represented as time, in seconds, between changes here) once the cursor as entered continuous movement.\n", 0.2);
 	fputs(buffer, configfile);
 	fputs("[controls]\n",configfile);
+	sprintf(buffer, "joystickdeadzone=%f\t;A floating-point value [0.000,1.000] with 0.00 meaning no deadzone and 1.000 being peak.\n", 0.125);
+	fputs(buffer, configfile);
 	sprintf(buffer, "thirdpersoncameraspeed=%d\t;The speed at which the camera moves while in a third person view. 0 being the slowest and 10 being the fastest.\n", 5);
 	fputs(buffer, configfile);
 	sprintf(buffer, "thirdpersoncamerax=%d\t;Determines whether the x-axis of the camera is inverted while in a third person view. 0 for \"normal\" and 1 for inverted.\n", 1);
