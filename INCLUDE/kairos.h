@@ -7,6 +7,9 @@
 extern "C" {
 #endif
 
+
+#include "build.h"
+
 #if USE_SDL2
 
 typedef struct Timer_struct {unsigned long PastTicks;

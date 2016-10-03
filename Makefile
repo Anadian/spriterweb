@@ -37,11 +37,11 @@ ifeq ($(PLATFORM),MacOSX)
 INCLUDES=-I$(INCLUDEDIR)
 ifeq ($(BACKEND),)
 $(info No backend specified; using TIGR by default)
-BACKEND=TIGR
+BACKEND=SDL2
 endif
 ifeq ($(BACKEND),SDL2)
 $(info Using SDL2)
-MOREFLAGS=$(BASEFLAGS),-lsdl2,-lgl,-lglew
+MOREFLAGS=$(BASEFLAGS),-lsdl2,-lsdl2_image,-lsdl2_ttf
 else ifeq ($(BACKEND),GLFW3)
 $(info Using GLFW3)
 MOREFLAGS=$(BASEFLAGS),-lglfw3,-lIL,-lILU -framework Cocoa -framework CoreVideo -framework IOKit -framework OpenGL

@@ -9,24 +9,29 @@
 extern "C" {
 #endif
 
-typedef struct InputEvent_struct {int type; //0 = empty, 1 = keyboard, 2 = joystick axis, 3 = joystick button, 4 = mouse motion, 5 = RNG
+typedef struct InputEvent_struct {int type; //0 = empty, 1 = keyboard, 2 = joystick axis, 3 = joystick button, 4 = mouse, 5 = RNG
 	float value;
-	double time;
+	unsigned long time;
 	char code[16];} InputEvent_type;
-	
-unsigned char Keys[105];
-int LastUnicode;
+InputEvent_type *InputEvents;
 
-#define INPUTEVENT_BUFFER_SIZE 32
+#if USE_SDL2
+#include <SDL2/SDL_joystick.h>
+typedef struct Joystick_struct {int id;
+	SDL_Joystick *joystick;} Joystick_type;
+Joystick_type *Joysticks;
+#endif //USE_SDL2
+
+/*#define INPUTEVENT_BUFFER_SIZE 32
 InputEvent_type InputEvent[INPUTEVENT_BUFFER_SIZE];
 int InputAddReference;
-int InputReadReference;
+int InputReadReference;*/
 
 int InitInput();
 int Input();
 int QuitInput();
-int InputAddEvent(InputEvent_type Event);
-int InputGetEvent(InputEvent_type *Event);
+/*int InputAddEvent(InputEvent_type Event);
+int InputGetEvent(InputEvent_type *Event);*/
 
 #ifdef __cplusplus
 }

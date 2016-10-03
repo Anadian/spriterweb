@@ -1,7 +1,9 @@
 // delog.c
 
 #include "delog.h"
+#include "build.h"
 #include "configuration.h"
+#include <stdio.h>
 #include <string.h>
 
 signed short CreateNewLog(){
@@ -99,8 +101,8 @@ signed short printl(unsigned short priority, char *fmt,...){
 }
 
 signed short QuitDelog(){
-	printl(1,"Quitting under normal circumstances and cleaning up properly.\n");
-	if(Configuration.debug.savepreviouslogs == 0) printl(1,"This log file will be overwritten on next start up.\n");
-	else printl(1,"This log file will not be overwritten on next start up.\n");
+	printl(1,"Quitting under normal circumstances and cleaning up properly.");
+	if(Configuration.debug.savepreviouslogs == 0) printl(1,"This log file will be overwritten on next start up.");
+	else printl(1,"This log file will not be overwritten on next start up.");
 	return 0;
 }

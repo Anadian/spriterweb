@@ -12,16 +12,15 @@ typedef struct Action_struct {signed long state;
 	char secondary[16];
 	char tertiary[16];} Action_type;
 	
-typedef struct Actions_struct {
-	Action_type PointUp;
-	Action_type PointDown;
-	Action_type PointLeft;
-	Action_type PointRight;
-	Action_type PointBack;
-	Action_type PointForward;
-} Actions_type;
+typedef enum ActionList_enum {Up,
+	Down,
+	Left,
+	Right,
+	Accept,
+	Cancel,
+	Numberofactions} ActionList_type;
 
-Actions_type Actions;
+Action_type Actions[Numberofactions];
 
 int ProcessActions();
 

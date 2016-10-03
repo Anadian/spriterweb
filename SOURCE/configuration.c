@@ -2,11 +2,11 @@
 #include "configuration.h"
 
 #include "ini.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <stdio.h> //sprintf
+#include <string.h> //strcmp
+#include <stdlib.h> //atol
+#include <unistd.h> //access
 
-int UpdateMostRecent(char *configfilename);
 
 static int handler(void* user, const char* section, const char* name, const char* value){
     ConfigurationFile_type *pconfig = (ConfigurationFile_type*)user;
@@ -104,29 +104,13 @@ int SaveConfiguration(char *configfilename){
 	return 0;
 }
 int LoadConfiguration(char *configfilename){
-	/*config_t ConfigFile;
-	config_init(&ConfigFile);
-	char *configfilename_localcopy;
-	strcpy(configfilename_localcopy,configfilename);
-	printf("In LoadConfiguration, configfilename: %s\n", configfilename_localcopy);
-	if(config_read_file(&ConfigFile, configfilename_localcopy) == CONFIG_TRUE){
-		printf("File read okay\n");
-		config_lookup_int(&ConfigFile,"video.xpos",&(Configuration.Video.xpos));
-		config_lookup_int(&ConfigFile,"video.ypos",&(Configuration.Video.ypos));
-		config_lookup_int(&ConfigFile,"video.width",&(Configuration.Video.width));
-		//printf("Video.width: %d\n", Configuration.Video.width);
-		config_lookup_int(&ConfigFile,"video.height",&(Configuration.Video.height));
-		config_lookup_int(&ConfigFile,"video.fullscreen",&(Configuration.Video.fullscreen));
-		config_destroy(&ConfigFile);
-		printf("Result of UpdateMostRecent: %d\n", UpdateMostRecent(configfilename_localcopy));
-		return 0;
+	if(access(configfilename, F_OK) == 0){
+		printf("Loading: %s\n", configfilename);
+		return ini_parse(configfilename,handler,&Configuration);
 	} else{
-		printf("File read not okay\n");
-		config_destroy(&ConfigFile);
+		printf("Couldn't find %s\n", configfilename);
 		return -1;
-	}*/
-	printf("Loading: %s\n", configfilename);
-	return ini_parse(configfilename,handler,&Configuration);
+	}
 }
 int CreateNewConfiguration(char *configfilename){
 	FILE *configfile = fopen(configfilename,"w+");
@@ -187,16 +171,4 @@ int CreateNewConfiguration(char *configfilename){
 	
 	fclose(configfile);
 	return 0;
-}
-int UpdateMostRecent(char *configfilename){
-	/*config_t ConfigFile;
-	config_init(&ConfigFile);
-	if(config_read_file(&ConfigFile, "appname.cfg") == CONFIG_TRUE){
-		config_setting_set_string(config_lookup(&ConfigFile,"configfilename"),configfilename);
-		config_destroy(&ConfigFile);
-		return 0;
-	} else{
-		config_destroy(&ConfigFile);
-		return -1;
-	}*/
 }

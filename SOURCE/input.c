@@ -1,17 +1,39 @@
 // input.c
 #include "input.h"
-#include <stdio.h>
-#include "video.h" //GetWindow
-#include "actions.h"
-#include <string.h> //strcpy
 #include "state.h"
+#include <stdio.h>
+#include "video.h" //Window
+#include "actions.h" //ProcessActions
+#include <string.h> //strcpy
 #include <stdlib.h> //abs
 #include "configuration.h" //joystickdeadzone
 #include "delog.h"
+#include "stretchy_buffer.h"
 
 #if USE_SDL2
 
 #include <SDL2/sdl.h>
+SDL_Event Event;
+SDL_Event PreviousEvent;
+int EventMatch(SDL_Event event, SDL_Event previousevent){
+	printl(5, "%s: %d %d", __func__, event, previousevent);
+	if(event.type == previousevent.type){
+		switch(event.type){
+			case SDL_KEYDOWN:
+			case SDL_KEYUP:
+				if((event.key.keysym.scancode == previousevent.key.keysym.scancode) && (event.key.keysym.mod == previousevent.key.keysym.mod) && (event.key.state == previousevent.key.state)) return 1;
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP:
+				if((event.button.button == previousevent.button.button) && (event.button.state == previousevent.button.state) && (event.button.x == previousevent.button.x) && (event.button.y == previousevent.button.y) ) return 1;
+				break;
+			default:
+				return 0;
+				break;
+		}
+	}
+	return 0;
+}
 
 #elif USE_GLFW3
 
@@ -22,7 +44,6 @@ unsigned char oldbuttons[32];
 
 #elif USE_TIGR
 
-Tigr *window_ptr;
 #include "gamepad/Gamepad.h"
 typedef struct Gamepad_device Gamepad;
 void DownCallback(Gamepad *device, int buttonID, double timestamp, void *context);
@@ -36,13 +57,17 @@ int TKFromSK(int sk);
 #endif
 
 int InitInput(){
-	InputAddReference = 0;
-	InputReadReference = 0;
-	int printplace = 0;
+	InputEvents = NULL;
+	Joystick_type Joystick;
+#if USE_SDL2
 	int i;
-	for(i = 0; i < INPUTEVENT_BUFFER_SIZE; i++){
-		InputEvent[i].type = 0;
+	for(i = 0; i < SDL_NumJoysticks(); i++){
+		Joystick.joystick = SDL_JoystickOpen(i);
+		Joystick.id = SDL_JoystickInstanceID(Joystick.joystick);
+		sb_push(Joysticks,Joystick);
 	}
+#endif //USE_SDL2
+
 #if USE_GLFW3
 
 	window_ptr = GetWindow();
@@ -50,8 +75,12 @@ int InitInput(){
 	glfwSetMouseButtonCallback(window_ptr, MouseButtonCallback);
 
 #elif USE_TIGR
-	for(i = 0; i < 105; i++) Keys[i] = 0;
-	window_ptr = GetWindow();
+	/*printf("SK\t|\tTK\t|\tchar\n");
+	for(i = 0; i < 105; i++){
+		Keys[i] = 0;
+		printf("%d\t|\t%d\t|\t%c\n", i, TKFromSK(i), CharFromSK(i));
+	}*/
+	//window_ptr = GetWindow();
 	Gamepad_buttonDownFunc(DownCallback,NULL);
 	Gamepad_buttonUpFunc(UpCallback,NULL);
 	Gamepad_axisMoveFunc(AxesCallback,NULL);
@@ -62,16 +91,94 @@ int InitInput(){
 
 int Input(){
 #if USE_SDL2
-	SDL_Event event;
-	while(SDL_PollEvent(&event)){
-		switch(event.type){
-			case SDL_QUIT: 
-				printf("SDL Quit after %d ticks", event.quit.timestamp);
-				CriticalVariables.AppRunning = 0;
-				break;
-			default:
-				break;
+	InputEvent_type InputEvent;
+	while(SDL_PollEvent(&Event)){
+		printl(5, "EventMatch returned %d", EventMatch(Event,PreviousEvent));
+		if( !EventMatch(Event, PreviousEvent) ){
+			switch(Event.type){
+				case SDL_QUIT: 
+					printl(5, "SDL Quit after %d ticks", Event.quit.timestamp);
+					CriticalVariables.AppRunning = 0;
+					break;
+				case SDL_KEYDOWN:
+					InputEvent.type = 1;
+					InputEvent.value = 1;
+					sprintf(InputEvent.code, "K%d+%d", Event.key.keysym.scancode, Event.key.keysym.mod);
+					InputEvent.time = Event.key.timestamp;
+					sb_push(InputEvents,InputEvent);
+					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
+					break;
+				case SDL_KEYUP:
+					InputEvent.type = 1;
+					InputEvent.value = -1;
+					sprintf(InputEvent.code, "K%d+%d", Event.key.keysym.scancode, Event.key.keysym.mod);
+					InputEvent.time = Event.key.timestamp;
+					sb_push(InputEvents,InputEvent);
+					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
+					break;
+				case SDL_MOUSEBUTTONDOWN:
+					InputEvent.type = 5;
+					InputEvent.value = 1;
+					sprintf(InputEvent.code, "M%d", Event.button.button);
+					InputEvent.time = Event.button.timestamp;
+					sb_push(InputEvents,InputEvent);
+					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
+					break;
+					
+				case SDL_MOUSEBUTTONUP:
+					InputEvent.type = 5;
+					InputEvent.value = -1;
+					sprintf(InputEvent.code, "M%d", Event.button.button);
+					InputEvent.time = Event.button.timestamp;
+					sb_push(InputEvents,InputEvent);
+					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
+					break;
+				case SDL_JOYBUTTONDOWN:
+					InputEvent.type = 4;
+					InputEvent.value = 1;
+					sprintf(InputEvent.code, "J%dB%d", Event.jbutton.which, Event.jbutton.button);
+					InputEvent.time = Event.jbutton.timestamp;
+					sb_push(InputEvents, InputEvent);
+					//printf("Added event %s with value %f at %d to %d\n", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
+					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
+					break;
+				case SDL_JOYBUTTONUP:
+					InputEvent.type = 4;
+					InputEvent.value = -1;
+					sprintf( InputEvent.code, "J%dB%d", Event.jbutton.which, Event.jbutton.button);
+					InputEvent.time = Event.jbutton.timestamp;
+					sb_push( InputEvents, InputEvent);
+					//printf("Added event %s with value %f at %d to %d\n", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
+					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
+					break;
+				case SDL_JOYAXISMOTION:
+					InputEvent.type = 3;
+					InputEvent.value = Event.jaxis.value;
+					sprintf(InputEvent.code, "J%dA%d", Event.jaxis.which, Event.jaxis.axis);
+					InputEvent.time = Event.jaxis.timestamp;
+					sb_push(InputEvents,InputEvent);
+					//printf("Added event %s with value %f at %d to %d\n", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
+					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
+					break;
+				case SDL_JOYHATMOTION:
+					InputEvent.type = 2;
+					InputEvent.value = Event.jhat.value;
+					sprintf(InputEvent.code, "J%dH%d", Event.jhat.which, Event.jhat.hat);
+					InputEvent.time = Event.jhat.timestamp;
+					sb_push(InputEvents,InputEvent);
+					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
+					//printf("Added event %s with value %f at %d to %d\n", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
+					break;
+				default:
+					break;
+			}
+			PreviousEvent = Event;
 		}
+	}
+	ProcessActions();
+	if(InputEvents != NULL){
+		sb_free(InputEvents);
+		InputEvents = NULL;
 	}
 #elif USE_GLFW3
 	glfwPollEvents();
@@ -115,12 +222,12 @@ int Input(){
 					 
 	ProcessActions();
 #elif USE_TIGR
-	if(tigrClosed(window_ptr)) CriticalVariables.AppRunning = 0;
+	if(tigrClosed(Window)) CriticalVariables.AppRunning = 0;
 	//if(tigrKeyHeld(window_ptr,TK_SPACE)) tigrPrint(window_ptr, tfont, 0, 0, tigrRGB(255,0,0), "Space is held");
 	unsigned char i;
 	for(i = '0'; i <= '9'; i++){
-		if(tigrKeyHeld(window_ptr,i) != Keys[i-48]){
-			if(tigrKeyHeld(window_ptr,i)){ //Pressed
+		if(tigrKeyHeld(Window,i) != Keys[i-48]){
+			if(tigrKeyHeld(Window,i)){ //Pressed
 				InputEvent_type Event;
 				Event.type = 1;
 				Event.value = 1;
@@ -141,12 +248,12 @@ int Input(){
 		}
 	}
 	for(i = 'A'; i <= 'Z'; i++){
-		if(tigrKeyHeld(window_ptr,i) != Keys[i-55]){
-			if(tigrKeyHeld(window_ptr,i)){ //Pressed
+		if(tigrKeyHeld(Window,i) != Keys[i-55]){
+			if(tigrKeyHeld(Window,i)){ //Pressed
 				//TextBufferAdd(i);
 				InputEvent_type Event;
 				Event.type = 1;
-				Event.value = -1;
+				Event.value = 1;
 				sprintf(Event.code, "K%d", i);
 				Event.time = tigrTime();
 				InputAddEvent(Event);
@@ -164,8 +271,8 @@ int Input(){
 		}
 	}
 	for(i = 128; i <= 197; i++){
-		if(tigrKeyHeld(window_ptr,i) != Keys[i-92]){
-			if(tigrKeyHeld(window_ptr,i)){ //Pressed
+		if(tigrKeyHeld(Window,i) != Keys[i-92]){
+			if(tigrKeyHeld(Window,i)){ //Pressed
 				InputEvent_type Event;
 				Event.type = 1;
 				Event.value = 1;
@@ -188,17 +295,24 @@ int Input(){
 	Gamepad_processEvents();
 	Gamepad_detectDevices();
 	ProcessActions();
-	LastUnicode = tigrReadChar(window_ptr);
+	LastUnicode = tigrReadChar(Window);
 #endif
 	return 0;
 }
 int QuitInput(){
-	Gamepad_shutdown();
+#if USE_SDL2
+	int i;
+	for(i = 0; i < sb_count(Joysticks); i++){
+		SDL_JoystickClose(Joysticks[i].joystick);
+	}
+	sb_free(Joysticks);
+#endif //USE_SDL2
 	return 0;
 }
+/*
 int InputAddEvent(InputEvent_type Event){
-	printl(4, "Added event %s to %d\t", Event.code, InputAddReference);
-	printf("Added event %s to %d\t", Event.code, InputAddReference);
+	printl(4, "Added event %s with %d to %d\t", Event.code, InputAddReference);
+	printf("Added event %s with %d to %d\t", Event.code, InputAddReference);
 	if(Event.type != NULL){
 		InputEvent[InputAddReference] = Event;
 		InputAddReference++;
@@ -215,15 +329,15 @@ int InputGetEvent(InputEvent_type *Event){
 		Event->time = InputEvent[InputReadReference].time;
 		strcpy(Event->code,InputEvent[InputReadReference].code);
 		InputEvent[InputReadReference].type = 0;
-		printl(4, "Read event %s from %d\n", Event->code, InputReadReference);
-		printf("Read event %s from %d\n", Event->code, InputReadReference);
+		printl(4, "Read event %s with %d from %d\n", Event->code, InputReadReference);
+		printf("Read event %s with %d from %d\n", Event->code, InputReadReference);
 		InputReadReference++;
 		if(InputReadReference == INPUTEVENT_BUFFER_SIZE) InputReadReference = 0;
 		return 1;
 	}else if(InputReadReference != InputAddReference) InputReadReference++;
 	if(InputReadReference == INPUTEVENT_BUFFER_SIZE) InputReadReference = 0;
 	return 0;
-}
+}*/
 	
 
 #if USE_GLFW3
@@ -524,15 +638,16 @@ char *ASCIIFromSK(int sk){
 			case TK_TICK: return "[TICK]"; break;
 		}
 	}
+	return string;
 }
 int SKFromTK(int tk){
 	if(tk < 58) return (tk - 48);
-	else if(tk < 91) return (tk-64);
+	else if(tk < 91) return (tk-54);
 	else return(tk-92);
 }
 char CharFromSK(int sk){
 	if(sk < 10) return (sk + 48);
-	else if(sk < 36) return (sk + 65);
+	else if(sk < 36) return (sk + 55);
 	else switch(sk){
 		case 64: return 8; break;
 		case 65: return '\t'; break;
@@ -554,7 +669,7 @@ char CharFromSK(int sk){
 }
 int SKFromChar(char c){
 	if(c < 58 && c >= 48) return (c - 48);
-	else if(c < 91 && c >= 65) return (c - 65);
+	else if(c < 91 && c >= 65) return (c - 55);
 	else switch(c){
 		case 8: return 64; break;
 		case '\t': return 65; break;
@@ -576,7 +691,7 @@ int SKFromChar(char c){
 }
 int TKFromSK(int sk){
 	if(sk < 10 && sk >= 0) return (sk + 48);
-	else if(sk < 36 && sk >= 10) return (sk + 65);
-	else return (sk + 128);
+	else if(sk < 36 && sk >= 10) return (sk + 55);
+	else return (sk + 92);
 }
 #endif

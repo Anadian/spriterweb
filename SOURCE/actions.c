@@ -3,74 +3,68 @@
 #include "actions.h"
 
 #include "ini.h"
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
+#include "stretchy_buffer.h"
 #include "input.h"
+#include <unistd.h> //access
 
 // s/checkstate\((.*)\)/if\(Actions\.\1\.state \> 0\) Actions\.\1\.state\+\+;\n\telse if\(Actions\.\1\.state \< 0\) Actions\.\1\.state--;
 // s/ifmatch\((.*)\)/if\( \(strcmp\(Event\.code,Actions.\1\.primary\) == 0\) || \(strcmp\(Event\.code,Actions\.\1\.secondary) == 0\) || \(strcmp\(Event\.code,Actions\.\1\.tertiary\) == 0\) \) Actions\.\1\.state = Event\.value;
 int ProcessActions(){
-	if(Actions.PointUp.state > 0) Actions.PointUp.state++;
-	else if(Actions.PointUp.state < 0) Actions.PointUp.state--;
-	if(Actions.PointDown.state > 0) Actions.PointDown.state++;
-	else if(Actions.PointDown.state < 0) Actions.PointDown.state--;
-	if(Actions.PointLeft.state > 0) Actions.PointLeft.state++;
-	else if(Actions.PointLeft.state < 0) Actions.PointLeft.state--;
-	if(Actions.PointRight.state > 0) Actions.PointRight.state++;
-	else if(Actions.PointRight.state < 0) Actions.PointRight.state--;
-	if(Actions.PointBack.state > 0) Actions.PointBack.state++;
-	else if(Actions.PointBack.state < 0) Actions.PointBack.state--;
-	if(Actions.PointForward.state > 0) Actions.PointForward.state++;
-	else if(Actions.PointForward.state < 0) Actions.PointForward.state--;
-	InputEvent_type Event;
-	Event.type = 0;
-	while(InputGetEvent(&Event)){
-		//printf("Got code: %s\n", Event.code);
-		//printf("Strncmp: %d Actions: %s\n", strncmp(Event.code,Actions.PointUp.primary,strlen(Actions.PointUp.primary)), Actions.PointUp.primary);
-		//if( (strcmp(Event.code,Actions.PointUp.primary) == 0) || (strcmp(Event.code,Actions.PointUp.secondary) == 0) || (strcmp(Event.code,Actions.tertiary) == 0) ) Actions.PointUp.state = Event.value;
-		if( (strcmp(Event.code,Actions.PointUp.primary) == 0) || (strcmp(Event.code,Actions.PointUp.secondary) == 0) || (strcmp(Event.code,Actions.PointUp.tertiary) == 0) ) Actions.PointUp.state = Event.value;
-		if( (strcmp(Event.code,Actions.PointDown.primary) == 0) || (strcmp(Event.code,Actions.PointDown.secondary) == 0) || (strcmp(Event.code,Actions.PointDown.tertiary) == 0) ) Actions.PointDown.state = Event.value;
-		if( (strcmp(Event.code,Actions.PointLeft.primary) == 0) || (strcmp(Event.code,Actions.PointLeft.secondary) == 0) || (strcmp(Event.code,Actions.PointLeft.tertiary) == 0) ) Actions.PointLeft.state = Event.value;
-		if( (strcmp(Event.code,Actions.PointRight.primary) == 0) || (strcmp(Event.code,Actions.PointRight.secondary) == 0) || (strcmp(Event.code,Actions.PointRight.tertiary) == 0) ) Actions.PointRight.state = Event.value;
-		if( (strcmp(Event.code,Actions.PointBack.primary) == 0) || (strcmp(Event.code,Actions.PointBack.secondary) == 0) || (strcmp(Event.code,Actions.PointBack.tertiary) == 0) ) Actions.PointBack.state = Event.value;
-		if( (strcmp(Event.code,Actions.PointForward.primary) == 0) || (strcmp(Event.code,Actions.PointForward.secondary) == 0) || (strcmp(Event.code,Actions.PointForward.tertiary) == 0) ) Actions.PointForward.state = Event.value;
-		Event.type = 0;
+	int i;
+	for(i = 0; i < Numberofactions; i++){
+		//printf("i: %d state: %d\n", i, Actions[i].state);
+		if(Actions[i].state > 0) Actions[i].state++;
+		else if(Actions[i].state < 0) Actions[i].state--;
 	}
+	int j;
+	for(j = 0; j < sb_count(InputEvents); j++){
+		for(i = 0; i < Numberofactions; i++){
+			if( (strcmp(InputEvents[j].code,Actions[i].primary) == 0) || (strcmp(InputEvents[j].code,Actions[i].secondary) == 0) || (strcmp(InputEvents[j].code,Actions[i].tertiary) == 0) ) Actions[i].state = InputEvents[j].value;
+		}
+	}
+	//sb_free(InputEvents);
 	return 1;
 }
 static int handler(void* user, const char* section, const char* name, const char* value){
-	Actions_type *pActions = (Actions_type *)user;
+	//Actions_type *pActions = (Actions_type *)user;
 	//printf("In AH, section %s, name %s, value %s\n", section, name, value);
-	if(strcmp(section,"PointUp") == 0){
-		if(strcmp(name,"primary") == 0) strcpy(pActions->PointUp.primary,value);
-		else if(strcmp(name,"secondary") == 0) strcpy(pActions->PointUp.secondary,value);
-		else if(strcmp(name,"tertiary") == 0) strcpy(pActions->PointUp.tertiary,value);
-	} else if(strcmp(section,"PointDown") == 0){
-		if(strcmp(name,"primary") == 0) strcpy(pActions->PointDown.primary,value);
-		else if(strcmp(name,"secondary") == 0) strcpy(pActions->PointDown.secondary,value);
-		else if(strcmp(name,"tertiary") == 0) strcpy(pActions->PointDown.tertiary,value);
-	} else if(strcmp(section,"PointLeft") == 0){
-		if(strcmp(name,"primary") == 0) strcpy(pActions->PointLeft.primary,value);
-		else if(strcmp(name,"secondary") == 0) strcpy(pActions->PointLeft.secondary,value);
-		else if(strcmp(name,"tertiary") == 0) strcpy(pActions->PointLeft.tertiary,value);
-	} else if(strcmp(section,"PointRight") == 0){
-		if(strcmp(name,"primary") == 0) strcpy(pActions->PointRight.primary,value);
-		else if(strcmp(name,"secondary") == 0) strcpy(pActions->PointRight.secondary,value);
-		else if(strcmp(name,"tertiary") == 0) strcpy(pActions->PointRight.tertiary,value);
-	} else if(strcmp(section,"PointBack") == 0){
-		if(strcmp(name,"primary") == 0) strcpy(pActions->PointBack.primary,value);
-		else if(strcmp(name,"secondary") == 0) strcpy(pActions->PointBack.secondary,value);
-		else if(strcmp(name,"tertiary") == 0) strcpy(pActions->PointBack.tertiary,value);
-	} else if(strcmp(section,"PointForward") == 0){
-		if(strcmp(name,"primary") == 0) strcpy(pActions->PointForward.primary,value);
-		else if(strcmp(name,"secondary") == 0) strcpy(pActions->PointForward.secondary,value);
-		else if(strcmp(name,"tertiary") == 0) strcpy(pActions->PointForward.tertiary,value);
-	} return 0;
+	if(strcmp(section,"Up") == 0){
+		if(strcmp(name,"primary") == 0) strcpy(Actions[Up].primary,value);
+		else if(strcmp(name,"secondary") == 0) strcpy(Actions[Up].secondary,value);
+		else if(strcmp(name,"tertiary") == 0) strcpy(Actions[Up].tertiary,value);
+	} else if(strcmp(section,"Down") == 0){
+		if(strcmp(name,"primary") == 0) strcpy(Actions[Down].primary,value);
+		else if(strcmp(name,"secondary") == 0) strcpy(Actions[Down].secondary,value);
+		else if(strcmp(name,"tertiary") == 0) strcpy(Actions[Down].tertiary,value);
+	} else if(strcmp(section,"Left") == 0){
+		if(strcmp(name,"primary") == 0) strcpy(Actions[Left].primary,value);
+		else if(strcmp(name,"secondary") == 0) strcpy(Actions[Left].secondary,value);
+		else if(strcmp(name,"tertiary") == 0) strcpy(Actions[Left].tertiary,value);
+	} else if(strcmp(section,"Right") == 0){
+		if(strcmp(name,"primary") == 0) strcpy(Actions[Right].primary,value);
+		else if(strcmp(name,"secondary") == 0) strcpy(Actions[Right].secondary,value);
+		else if(strcmp(name,"tertiary") == 0) strcpy(Actions[Right].tertiary,value);
+	} else if(strcmp(section,"Accept") == 0){
+		if(strcmp(name,"primary") == 0) strcpy(Actions[Accept].primary,value);
+		else if(strcmp(name,"secondary") == 0) strcpy(Actions[Accept].secondary,value);
+		else if(strcmp(name,"tertiary") == 0) strcpy(Actions[Accept].tertiary,value);
+	} else if(strcmp(section,"Cancel") == 0){
+		if(strcmp(name,"primary") == 0) strcpy(Actions[Cancel].primary,value);
+		else if(strcmp(name,"secondary") == 0) strcpy(Actions[Cancel].secondary,value);
+		else if(strcmp(name,"tertiary") == 0) strcpy(Actions[Cancel].tertiary,value);
+	} else return 0;
 	return 1;
 }
 int LoadActions(char *actionsfilename){
-	printf("Loading %s\n", actionsfilename);
-	return ini_parse(actionsfilename,handler,&Actions);
+	if(access(actionsfilename, F_OK) == 0){
+		printf("Loading: %s\n", actionsfilename);
+		return ini_parse(actionsfilename,handler,NULL);
+	} else{
+		printf("Couldn't find %s\n", actionsfilename);
+		return -1;
+	}
 }
 //s/PM\((.*)\)/fputs\(\"\[\1\]\", actionsfile);\n\tsprintf\(buffer, \"\1=%s\\nsecondary=%s\\ntertiary=%s\\n\", Actions.\1.primary, Actions.\1.secondary, Actions.\1.tertiary\);\n\tfputs\(buffer, actionsfile\);/
 int SaveActions(char *actionsfilename){
@@ -78,26 +72,26 @@ int SaveActions(char *actionsfilename){
 	char buffer[256];
 	sprintf(buffer, ";%s\n", actionsfilename);
 	fputs(buffer, actionsfile);
-	/*fputs("[PointUp]", actionsfile);
-	sprintf(buffer, "primary=%s\n", Actions.PointUp.primary);
+	/*fputs("[Up]", actionsfile);
+	sprintf(buffer, "primary=%s\n", Actions.Up.primary);
 	fputs(buffer, actionsfile);*/
-	fputs("[PointUp]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", Actions.PointUp.primary, Actions.PointUp.secondary, Actions.PointUp.tertiary);
+	fputs("[Up]\n", actionsfile);
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", Actions[Up].primary, Actions[Up].secondary, Actions[Up].tertiary);
 	fputs(buffer, actionsfile);
-	fputs("[PointDown]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", Actions.PointDown.primary, Actions.PointDown.secondary, Actions.PointDown.tertiary);
+	fputs("[Down]\n", actionsfile);
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", Actions[Down].primary, Actions[Down].secondary, Actions[Down].tertiary);
 	fputs(buffer, actionsfile);
-	fputs("[PointLeft]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", Actions.PointLeft.primary, Actions.PointLeft.secondary, Actions.PointLeft.tertiary);
+	fputs("[Left]\n", actionsfile);
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", Actions[Left].primary, Actions[Left].secondary, Actions[Left].tertiary);
 	fputs(buffer, actionsfile);
-	fputs("[PointRight]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", Actions.PointRight.primary, Actions.PointRight.secondary, Actions.PointRight.tertiary);
+	fputs("[Right]\n", actionsfile);
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", Actions[Right].primary, Actions[Right].secondary, Actions[Right].tertiary);
 	fputs(buffer, actionsfile);
-	fputs("[PointBack]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", Actions.PointBack.primary, Actions.PointBack.secondary, Actions.PointBack.tertiary);
+	fputs("[Accept]\n", actionsfile);
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", Actions[Accept].primary, Actions[Accept].secondary, Actions[Accept].tertiary);
 	fputs(buffer, actionsfile);
-	fputs("[PointForward]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", Actions.PointForward.primary, Actions.PointForward.secondary, Actions.PointForward.tertiary);
+	fputs("[Cancel]\n", actionsfile);
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", Actions[Cancel].primary, Actions[Cancel].secondary, Actions[Cancel].tertiary);
 	fputs(buffer, actionsfile);
 	fclose(actionsfile);
 	return 0;
@@ -107,23 +101,23 @@ int CreateNewActions(char *actionsfilename){
 	char buffer[256];
 	sprintf(buffer, ";%s\n", actionsfilename);
 	fputs(buffer, actionsfile);
-	fputs("[PointUp]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K87+0", "M0+0", "J0B12");
+	fputs("[Up]\n", actionsfile);
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K87+0", "M0", "J0A12");
 	fputs(buffer, actionsfile);
-	fputs("[PointDown]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K83+0", "M1+0", "J0B14");
+	fputs("[Down]\n", actionsfile);
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K83+0", "M1", "J0B14");
 	fputs(buffer, actionsfile);
-	fputs("[PointLeft]\n", actionsfile);
+	fputs("[Left]\n", actionsfile);
 	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K65+0", "\0", "J0B15");
 	fputs(buffer, actionsfile);
-	fputs("[PointRight]\n", actionsfile);
+	fputs("[Right]\n", actionsfile);
 	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K68+0", "\0", "J0B13");
 	fputs(buffer, actionsfile);
-	fputs("[PointBack]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K81+0", "\0", "\0");
+	fputs("[Accept]\n", actionsfile);
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K158+0", "\0", "J0B1");
 	fputs(buffer, actionsfile);
-	fputs("[PointForward]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K69+0", "\0", "\0");
+	fputs("[Cancel]\n", actionsfile);
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K164+0", "\0", "J0B2");
 	fputs(buffer, actionsfile);
 	fclose(actionsfile);
 	return 0;
