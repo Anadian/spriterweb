@@ -1,7 +1,6 @@
 // Logic_Main.c
 
 #include "logic_main.h"
-#include "state.h"
 #include <unistd.h> //usleep
 #include <stdio.h> //printf
 #include "delog.h"
@@ -12,8 +11,11 @@
 
 #include "video.h"
 #include "actions.h"
+#include "kairos.h"
+#include "unit.h"
+#include "parson.h"
 
-void *LogicMain(void *arg){
+ThreadFunction_type *LogicMain(void *arg){
 	CriticalVariables.LogicThread = 1;
 	
 	//Init Lua
@@ -27,32 +29,55 @@ void *LogicMain(void *arg){
 	printl(5, "Lual_loadfile: %d %d %d %d", luaL_loadfile(L, "./SCRIPT/init.lua"), LUA_ERRSYNTAX, LUA_ERRMEM, LUA_ERRFILE);
 	printl(5, "Lual_pcall: %d", lua_pcall(L, 0, 0, 0));
 	//luaL_loadfile(L, "./SCRIPT/main.lua");
-	int imageid;
-	//imageid = WriteText("Blit test success.");
-	int imagex;
-	imagex = 10;
-	int imagey;
-	imagey = 10;
+	int colour;
+	colour = AddColour(255,0,0,0);
+	int x, y, w, h;
+	x = 0;
+	y = 0;
+	w = 32;
+	h = 32; 
 	
-	int LogicFrame;
-	LogicFrame = 0;
+	JSON_Value *root_value;
+	root_value = json_value_init_array();
+	JSON_Array *json_array;
+	json_array = json_value_get_array(root_value);
+	
+	CriticalVariables.LogicFrame = 0;
+	Timer_type FrameTimer;
 	while(CriticalVariables.AppRunning == 1){
-		printl(5, "LogicFrame: %d", LogicFrame);
+		printl(5, "LogicFrame: %d LogicSplit: %d", CriticalVariables.LogicFrame, CriticalVariables.LogicSplit);
+		ResetTimer(&FrameTimer);
 		//pthread_mutex_lock(&(CriticalVariables.ActionsMutex));
 		//usleep(5000000);
-		//Lock(Actions)
-		if(Actions[Up].state > 0) imagey--;
-		if(Actions[Down].state > 0) imagey++;
-		if(Actions[Left].state > 0) imagex--;
-		if(Actions[Right].state > 0) imagex++;
-		/*Unlock(Actions)
-		Lock(Blits)
-		ClearBlits();
-		AddBlit(imageid, 0, imagex, imagey);
-		Unlock(Blits)
-		//pthread_mutex_unlock(&(CriticalVariables.ActionsMutex));*/
-		LogicFrame++;
+		LockMutex(ActionsMutex)
+		if(Action(Up) > 0) h--;
+		if(Action(Down) > 0) h++;
+		if(Action(Left) > 0) w--;
+		if(Action(Right) > 0) w++;
+		if(Action(Accept) == 1){
+			JSON_Object *object;
+			json_object_set_number(object, "x", x);
+			json_object_set_number(object, "y", y);
+			json_object_set_number(object, "w", w);
+			json_object_set_number(object, "h", h);
+			//json_array_append_value(json_array, json_object_get_value(object));
+		}
+		UnlockMutex(ActionsMutex)
+		
+		LockMutex(RenderMutex)
+		ClearRenderRects();
+		AddRenderRect(x, y, w, h, 0, colour);
+		UnlockMutex(RenderMutex)
+		CriticalVariables.LogicFrame++;
+		CriticalVariables.LogicSplit = GetTicks(&FrameTimer);
 	}
+	
+	json_serialize_to_file_pretty(root_value, "yo.json");
+	json_array_clear(json_array);
+	json_value_free(root_value);
+	
+	ClearRenderRects();
+	ClearColours();
 	
 	luaL_dofile(L, "./SCRIPT/quit.lua");
 	lua_close(L);

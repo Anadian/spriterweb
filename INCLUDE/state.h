@@ -11,16 +11,16 @@ extern "C" {
 
 #if USE_SDL_THREADS
 #include <SDL2/SDL_thread.h>
-#define Thread_type SDL_Thread
+#define Thread_type SDL_Thread*
 #define ThreadFunction_type SDL_ThreadFunction
 #define CreateThread(threadname,threadfunction) SDL_CreateThread(threadfunction, #threadname, NULL);
 #define JoinThread(thread) SDL_WaitThread(thread, NULL);
 #include <SDL2/SDL_mutex.h>
-#define Mutex_type SDL_mutex
-#define CreateMutex(mutex) mutex = SDL_CreateMutex();
-#define DestroyMutex(mutex) SDL_DestroyMutex(mutex);
-#define LockMutex(mutex) SDL_LockMutex(mutex);
-#define UnlockMutex(mutex) SDL_UnlockMutex(mutex);
+#define Mutex_type SDL_mutex*
+#define CreateMutex(mutex) /*printf("Creating %s\n", #mutex);*/ Mutex[mutex] = SDL_CreateMutex();
+#define DestroyMutex(mutex) /*printf("Destroying %s\n", #mutex);*/ SDL_DestroyMutex(Mutex[mutex]);
+#define LockMutex(mutex) /*printf("Locking %s\n", #mutex);*/ SDL_LockMutex(Mutex[mutex]);
+#define UnlockMutex(mutex) /*printf("Unlocking %s\n", #mutex);*/ SDL_UnlockMutex(Mutex[mutex]);
 #else
 #include <pthread.h>
 #define Thread_type pthread_t
@@ -38,11 +38,27 @@ extern "C" {
 //#include <stdio.h>
 typedef struct CriticalVariables_struct {signed short AppRunning;
 	signed short MainThread;
-	signed short VideoInit;
+	unsigned long MainFrame;
+	unsigned long MainSplit;
 	signed short LogicThread;
+	unsigned long LogicFrame;
+	unsigned long LogicSplit;
 	char State;} CriticalVariables_type;
+enum Mutex_enum {
+	DelogMutex,
+	ImagesMutex,
+	FontsMutex,
+	ActionsMutex,
+	BlitsMutex,
+	RenderMutex,
+	Numberofmutexes};
+	
+Mutex_type Mutex[Numberofmutexes];
+
 
 CriticalVariables_type CriticalVariables;
+
+
 
 #ifdef __cplusplus
 }

@@ -20,6 +20,7 @@
 #include "kairos.h"
 #include "input.h"
 #include "video.h"
+#include "logic_main.h"
 
 
 int main(int argc, char *argv[]){
@@ -81,6 +82,10 @@ printf("Available options:\n\
 		}
 	}
 	
+	int i;
+	for(i = 0; i < Numberofmutexes; i++){
+		CreateMutex(i)
+	}
 	CreateNewLog();
 	InitMiddleWare();
 
@@ -103,18 +108,19 @@ printf("Available options:\n\
 	CriticalVariables.MainThread = 0;
 	CriticalVariables.LogicThread = 0;
 	
+	Thread_type LogicThread;
+	LogicThread = CreateThread(LogicThread,LogicMain)
+	
 	int font;
 	font = LoadFont("Resources/FSMR.ttf", 16);
 	int image;
 	image = LoadImage("Resources/C3P1.png");
 	
+	CriticalVariables.MainFrame = 0;
 	CriticalVariables.MainThread = 1;
 	Timer_type FrameTimer;
-	FrameSplit = 1;
-	int MainFrame;
-	MainFrame = 0;
 	while(CriticalVariables.AppRunning == 1){
-		printl(5, "MainFrame: %d Split: %d FPS: %f", MainFrame, FrameSplit, (float)(1000/((FrameSplit>0)?FrameSplit:1)));
+		printl(5, "MainFrame: %d Split: %d FPS: %f", CriticalVariables.MainFrame, CriticalVariables.MainSplit, (float)(1000/((CriticalVariables.MainSplit>0)?CriticalVariables.MainSplit:1)));
 		ResetTimer(&FrameTimer);
 		//usleep(2000000);
 		//Input (input/video thread)
@@ -122,15 +128,21 @@ printf("Available options:\n\
 		//printf("Point.x:%f Point.y:%f Point.z:%f\n", Points.pos.x, Points.pos.y, Points.pos.z);
 		//Logic (logic/player thread)
 		//Video (input/video thread)
+		LockMutex(BlitsMutex)
+		ClearBlits();
 		AddBlit(image, 0, 0, 0, 0, 0);
+		UnlockMutex(BlitsMutex)
 		Video();
 		//FileIO (fileIO thread)
 		//State (logic/player thread)
-		MainFrame++;
-		FrameSplit = GetTicks(&FrameTimer);
+		CriticalVariables.MainFrame++;
+		CriticalVariables.MainSplit = GetTicks(&FrameTimer);
 	}
 	printf("Exiting cleanly.\n");
 	
+	JoinThread(LogicThread)
+	
+	ClearBlits();
 	ClearFonts();
 	ClearImages();
 	QuitInput();
@@ -143,6 +155,9 @@ printf("Available options:\n\
 #endif// 
 // 	lua_close(L);
 	QuitDelog();
+	for(i = 0; i < Numberofmutexes; i++){
+		DestroyMutex(i)
+	}
 	
 	CriticalVariables.MainThread = 2;
 	printf("Main thread terminating\n");

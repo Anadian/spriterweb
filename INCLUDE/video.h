@@ -67,7 +67,7 @@ typedef struct RenderLine_struct{
 	int colour;} RenderLine_type;
 typedef struct RenderRect_struct{
 	Rect_type rect;
-	unsigned short filled;
+	int filled;
 	int colour;} RenderRect_type;
 Colour_type *Colours;
 RenderPoint_type *RenderPoints;
@@ -104,7 +104,7 @@ int AddRenderPoint(int x, int y, int colour);
 int ClearRenderPoints();
 int AddRenderLine(int x1, int y1, int x2, int y2, int colour);
 int ClearRenderLines();
-int RenderRect(int x, int y, int w, int h, int filled, int colour);
+int AddRenderRect(int x, int y, int w, int h, int filled, int colour);
 int ClearRenderRects();
 
 #ifdef __cplusplus

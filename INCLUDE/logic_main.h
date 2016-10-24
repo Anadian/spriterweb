@@ -7,7 +7,9 @@
 extern "C" {
 #endif
 
-void *LogicMain(void *arg);
+#include "state.h"
+
+ThreadFunction_type *LogicMain(void *arg);
 
 #ifdef __cplusplus
 }

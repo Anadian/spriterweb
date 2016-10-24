@@ -8,10 +8,13 @@
 #include "stretchy_buffer.h"
 #include "input.h"
 #include <unistd.h> //access
+#include "state.h"
+#include "delog.h"
 
 // s/checkstate\((.*)\)/if\(Actions\.\1\.state \> 0\) Actions\.\1\.state\+\+;\n\telse if\(Actions\.\1\.state \< 0\) Actions\.\1\.state--;
 // s/ifmatch\((.*)\)/if\( \(strcmp\(Event\.code,Actions.\1\.primary\) == 0\) || \(strcmp\(Event\.code,Actions\.\1\.secondary) == 0\) || \(strcmp\(Event\.code,Actions\.\1\.tertiary\) == 0\) \) Actions\.\1\.state = Event\.value;
 int ProcessActions(){
+	LockMutex(ActionsMutex)
 	int i;
 	for(i = 0; i < Numberofactions; i++){
 		//printf("i: %d state: %d\n", i, Actions[i].state);
@@ -25,6 +28,7 @@ int ProcessActions(){
 		}
 	}
 	//sb_free(InputEvents);
+	UnlockMutex(ActionsMutex)
 	return 1;
 }
 static int handler(void* user, const char* section, const char* name, const char* value){
@@ -58,13 +62,17 @@ static int handler(void* user, const char* section, const char* name, const char
 	return 1;
 }
 int LoadActions(char *actionsfilename){
+	LockMutex(ActionsMutex)
+	int ReturnValue;
 	if(access(actionsfilename, F_OK) == 0){
 		printf("Loading: %s\n", actionsfilename);
-		return ini_parse(actionsfilename,handler,NULL);
+		ReturnValue = ini_parse(actionsfilename,handler,NULL);
 	} else{
 		printf("Couldn't find %s\n", actionsfilename);
-		return -1;
+		ReturnValue = -1;
 	}
+	UnlockMutex(ActionsMutex)
+	return ReturnValue;
 }
 //s/PM\((.*)\)/fputs\(\"\[\1\]\", actionsfile);\n\tsprintf\(buffer, \"\1=%s\\nsecondary=%s\\ntertiary=%s\\n\", Actions.\1.primary, Actions.\1.secondary, Actions.\1.tertiary\);\n\tfputs\(buffer, actionsfile\);/
 int SaveActions(char *actionsfilename){
@@ -102,25 +110,30 @@ int CreateNewActions(char *actionsfilename){
 	sprintf(buffer, ";%s\n", actionsfilename);
 	fputs(buffer, actionsfile);
 	fputs("[Up]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K87+0", "M0", "J0A12");
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K26+0", "M0", "J0A12");
 	fputs(buffer, actionsfile);
 	fputs("[Down]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K83+0", "M1", "J0B14");
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K22+0", "M1", "J0B14");
 	fputs(buffer, actionsfile);
 	fputs("[Left]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K65+0", "\0", "J0B15");
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K4+0", "\0", "J0B15");
 	fputs(buffer, actionsfile);
 	fputs("[Right]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K68+0", "\0", "J0B13");
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K7+0", "\0", "J0B13");
 	fputs(buffer, actionsfile);
 	fputs("[Accept]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K158+0", "\0", "J0B1");
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K40+0", "\0", "J0B1");
 	fputs(buffer, actionsfile);
 	fputs("[Cancel]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K164+0", "\0", "J0B2");
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K41+0", "\0", "J0B2");
 	fputs(buffer, actionsfile);
 	fclose(actionsfile);
 	return 0;
 }
-	
+signed long Action(int action){
+	signed long state;
+	state = Actions[action].state;
+	printl(5, "%s: %d | %d", __func__, action, state);
+	return state;
+}
 	

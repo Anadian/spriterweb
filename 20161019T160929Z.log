@@ -1,0 +1,43 @@
+spriterweb v1.0
+Built on Oct 19 2016 at 12:09:26.
+Original filename: 20161019T160929Z.log
+Current debug verbosity: 4
+LoadFont: Resources/FSMR.ttf 16 |  1
+LoadImage: Resources/C3P1.png |   1 1
+Added event J0A0 with value -129.000000 at 1841 to 1
+Added event J0A1 with value -129.000000 at 1841 to 2
+Added event J0A2 with value 128.000000 at 1841 to 3
+Added event J0A3 with value 128.000000 at 1841 to 4
+Added event K22+0 with value 1.000000 at 3612 to 1
+Added event K22+0 with value -1.000000 at 3932 to 1
+Added event K26+0 with value 1.000000 at 4365 to 1
+Added event K26+0 with value -1.000000 at 4522 to 1
+Added event K22+0 with value 1.000000 at 5206 to 1
+Added event K22+0 with value -1.000000 at 5277 to 1
+Added event K22+0 with value 1.000000 at 5701 to 1
+Added event K22+0 with value -1.000000 at 5796 to 1
+Added event K22+0 with value 1.000000 at 6253 to 1
+Added event K22+0 with value -1.000000 at 6364 to 1
+Added event K26+0 with value 1.000000 at 6793 to 1
+Added event K26+0 with value -1.000000 at 6890 to 1
+Added event K7+0 with value 1.000000 at 7256 to 1
+Added event K7+0 with value -1.000000 at 7380 to 1
+Added event K22+0 with value 1.000000 at 8007 to 1
+Added event K22+0 with value -1.000000 at 8190 to 1
+Added event K26+0 with value 1.000000 at 9124 to 1
+Added event K26+0 with value -1.000000 at 9228 to 1
+Added event K26+0 with value 1.000000 at 9707 to 1
+Added event K26+0 with value -1.000000 at 9740 to 1
+Added event K26+0 with value 1.000000 at 10188 to 1
+Added event K26+0 with value -1.000000 at 10276 to 1
+Added event K26+0 with value 1.000000 at 11188 to 1
+Added event K26+0 with value -1.000000 at 11308 to 1
+Added event K22+0 with value 1.000000 at 13037 to 1
+Added event K22+0 with value -1.000000 at 13140 to 1
+Added event K22+0 with value 1.000000 at 13939 to 1
+Added event K22+0 with value -1.000000 at 14061 to 1
+Added event K227+0 with value 1.000000 at 16595 to 1
+Added event K20+1024 with value 1.000000 at 16844 to 1
+Added event K20+1024 with value -1.000000 at 16971 to 2
+Quitting under normal circumstances and cleaning up properly.
+This log file will be overwritten on next start up.

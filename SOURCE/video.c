@@ -114,6 +114,9 @@ void DestroyWindow(Tigr *subwindow){
 	
 int Video(){
 #if USE_SDL2
+	LockMutex(RenderMutex)
+	LockMutex(BlitsMutex)
+	SDL_SetRenderDrawColor(Renderer, 0, 0, 0, 255);
 	SDL_RenderClear(Renderer);
 	int i;
 	for(i = 0; i < sb_count(Blits); i++){
@@ -161,7 +164,8 @@ int Video(){
 		if(RenderRects[i].filled == 1) SDL_RenderFillRect(Renderer, &(RenderRects[i].rect));
 	}
 	SDL_RenderPresent(Renderer);
-	ClearBlits();
+	UnlockMutex(RenderMutex)
+	UnlockMutex(BlitsMutex)
 	
 
 #elif USE_GLFW3
@@ -225,7 +229,7 @@ int LoadImage(char *filename){
 	Image.frame = sb_count(Frames);
 	SDL_FreeSurface(tmp_surface);
 	sb_push(Images,Image);
-	printl(5, "%s: %s | %s %s %d %d", __func__, filename, SDL_GetError(), IMG_GetError(), sb_count(Frames), sb_count(Images));
+	printl(3, "%s: %s | %s %s %d %d", __func__, filename, SDL_GetError(), IMG_GetError(), sb_count(Frames), sb_count(Images));
 	return sb_count(Images) - 1;
 }
 int ClearImages(){
@@ -246,8 +250,8 @@ int LoadFont(char *filename, int size){
 	Font.size = size;
 	Font.font = TTF_OpenFont(filename, size);
 	sb_push(Fonts, Font);
-	printl(5, "%s: %s %d | %s %d", __func__, filename, size, TTF_GetError(), sb_count(Fonts));
-	return sb_count(Fonts);
+	printl(3, "%s: %s %d | %s %d", __func__, filename, size, TTF_GetError(), sb_count(Fonts));
+	return sb_count(Fonts) - 1;
 }
 int ClearFonts(){
 	int i;

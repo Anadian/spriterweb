@@ -2,6 +2,7 @@
 
 #include "delog.h"
 #include "build.h"
+#include "state.h"
 #include "configuration.h"
 #include <stdio.h>
 #include <string.h>
@@ -39,6 +40,7 @@ signed short CreateNewLog(){
 }
 signed short printl(unsigned short priority, char *fmt,...){
 	if(priority <= Configuration.debug.verbosity){
+		LockMutex(DelogMutex)
 		char Buffer[256];
 		strcpy(&Buffer,fmt);
 		//printf("%s\n", Buffer);
@@ -96,6 +98,7 @@ signed short printl(unsigned short priority, char *fmt,...){
 		va_end(args);
 		fputs("\n", logfile);
 		fclose(logfile);
+		UnlockMutex(DelogMutex)
 	}
 	return 0;
 }

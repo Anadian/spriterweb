@@ -12,13 +12,13 @@ typedef struct Action_struct {signed long state;
 	char secondary[16];
 	char tertiary[16];} Action_type;
 	
-typedef enum ActionList_enum {Up,
+enum Actions_enum {Up,
 	Down,
 	Left,
 	Right,
 	Accept,
 	Cancel,
-	Numberofactions} ActionList_type;
+	Numberofactions};
 
 Action_type Actions[Numberofactions];
 
@@ -27,6 +27,8 @@ int ProcessActions();
 int LoadActions(char *actionsfilename);
 int SaveActions(char *actionsfilename);
 int CreateNewActions(char *actionsfilename);
+
+signed long Action(int action);
 
 #ifdef __cplusplus
 }

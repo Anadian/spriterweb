@@ -10,7 +10,7 @@
 
 static int handler(void* user, const char* section, const char* name, const char* value){
     ConfigurationFile_type *pconfig = (ConfigurationFile_type*)user;
-	
+	//printf("section: %s name: %s value: %s\n", section, name, value);
 	if(strcmp(section,"video") == 0){
 		if(strcmp(name,"xpos") == 0) pconfig->video.xpos = atol(value);
 		else if(strcmp(name,"ypos") == 0) pconfig->video.ypos = atol(value);
