@@ -11,11 +11,12 @@ PLATFORM=WINDOWS
 else ifeq ($(shell uname -s),Linux)
 $(info Building for Linux)
 PLATFORM=Linux
+CC=gcc
 else
 $(info Platform unkown; using defaults)
 PLATFORM=Unkown
 endif
-CC=clang
+CC?=clang
 SOURCEDIR=./SOURCE
 SOURCE=$(wildcard $(SOURCEDIR)/*.c)
 OBJECTSDIR=./OBJECTS
@@ -32,13 +33,14 @@ endif
 BIN=$(BINDIR)/$(NAME).$(PLATFORM)
 
 BASEFLAGS=-L./LIB -Wl,-llua
-
-ifeq ($(PLATFORM),MacOSX)
 INCLUDES=-I$(INCLUDEDIR)
+
 ifeq ($(BACKEND),)
-$(info No backend specified; using TIGR by default)
+$(info No backend specified; using SDL2 by default)
 BACKEND=SDL2
 endif
+
+ifeq ($(PLATFORM),MacOSX)
 ifeq ($(BACKEND),SDL2)
 $(info Using SDL2)
 MOREFLAGS=$(BASEFLAGS),-lsdl2,-lsdl2_image,-lsdl2_ttf
@@ -49,9 +51,14 @@ else ifeq ($(BACKEND),TIGR)
 $(info Using TIGR)
 MOREFLAGS=$(BASEFLAGS),-lgamepad -framework Cocoa -framework CoreVideo -framework IOKit -framework OpenGL
 endif
+else ifeq ($(PLATFORM),Linux)
+ifeq ($(BACKEND),SDL2)
+$(info Using SDL2)
+MOREFLAGS=$(BASEFLAGS),-lSDL2,-lSDL2_image,-lSDL2_ttf,-lm
+endif
 endif
 
-ifeq ($(VERBOSE),ON)
+ifeq ($(VERBOSE),on)
 FINALFLAGS=$(MOREFLAGS) -v
 else
 FINALFLAGS=$(MOREFLAGS)

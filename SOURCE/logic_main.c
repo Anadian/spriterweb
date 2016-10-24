@@ -22,9 +22,9 @@ ThreadFunction_type *LogicMain(void *arg){
 	char buffer[256];
 	lua_State *L = luaL_newstate();
 	double *version;
-	version = lua_version(L);
+	//version = lua_version(L);
 	luaL_openlibs(L);
-	printl(5, "Lua: %f", *version);
+	//printl(5, "Lua: %f", *version);
 	
 	printl(5, "Lual_loadfile: %d %d %d %d", luaL_loadfile(L, "./SCRIPT/init.lua"), LUA_ERRSYNTAX, LUA_ERRMEM, LUA_ERRFILE);
 	printl(5, "Lual_pcall: %d", lua_pcall(L, 0, 0, 0));

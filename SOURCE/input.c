@@ -12,7 +12,7 @@
 
 #if USE_SDL2
 
-#include <SDL2/sdl.h>
+#include <SDL2/SDL.h>
 SDL_Event Event;
 SDL_Event PreviousEvent;
 int EventMatch(SDL_Event event, SDL_Event previousevent){

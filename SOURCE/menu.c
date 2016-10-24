@@ -1,5 +1,5 @@
 //menu.c
-
+/*
 #include "menu.h"
 #include "stdio.h" //sprintf
 #include "parson.h"
@@ -11,7 +11,7 @@ int LoadMenu(unsigned long menu){
 	char *filename;
 	sprintf(filename, "Resources/menu%d.json", menu);
 	/*FILE *file;
-	file = fopen(filename, "r");*/
+	file = fopen(filename, "r");*
 	JSON_Value *Root_value;
 	Root_value = json_parse_file(filename);
 	JSON_Array *Root_array;
@@ -41,4 +41,4 @@ int ClearEntries(){
 		Entries = NULL;
 	}
 	return 0;
-}
+}*/

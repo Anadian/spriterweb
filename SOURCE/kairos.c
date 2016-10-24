@@ -3,7 +3,7 @@
 #include "kairos.h"
 
 #if USE_SDL2
-#include <SDL2/sdl.h>
+#include <SDL2/SDL.h>
 
 unsigned long GetTicks(Timer_type *Timer){
 	if(Timer->Paused) return Timer->CurrentTicks;

@@ -39,8 +39,8 @@ int main(int argc, char *argv[]){
 	char c;
 	int long_option_index;
 	long_option_index = 0;
-	while((c = getopt_long(argc,argv,"hVc:a:v::", long_options, &long_option_index)) != -1){
-		printf("%c\n", c);
+	while( ((c = getopt_long(argc,argv,"hVc:a:v::", long_options, &long_option_index)) != -1) && (c != 255)){
+		printf("%c %d\n", c, c);
 		switch(c){
 			case 'h':
 printf("Available options:\n\
@@ -51,7 +51,7 @@ printf("Available options:\n\
 	-a [file], --actions [file]\t Use file for actions file; defaults to ./CONFIG/input.current.ini.\n");
 				break;
 			case 'V': 
-				printf("v%d.%d %s: built on %s at %s (%d)\n", VERSION_MAJOR, VERSION_MINOR, BUILD_NAME, BUILD_DATE, BUILD_TIME, __STDC_VERSION__);
+				printf("v%d.%d %s: built on %s at %s\n", VERSION_MAJOR, VERSION_MINOR, BUILD_NAME, BUILD_DATE, BUILD_TIME);
 				break;
 			case 'v': break;
 			case 'c':

@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 #if USE_SDL2
-#include <SDL2/sdl.h>
+#include <SDL2/SDL.h>
 
 #elif USE_GLFW3
 #include <GLFW/glfw3.h>

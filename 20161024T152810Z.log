@@ -1,0 +1,8 @@
+spriterweb v1.0
+Built on Oct 24 2016 at 11:28:06.
+Original filename: 20161024T152810Z.log
+Current debug verbosity: 4
+LoadFont: Resources/FSMR.ttf 16 | Failed loading eglChooseConfig: /usr/lib/libSDL2-2.0.so.0: undefined symbol: _eglChooseConfig 1
+LoadImage: Resources/C3P1.png | Failed loading eglChooseConfig: /usr/lib/libSDL2-2.0.so.0: undefined symbol: _eglChooseConfig Failed loading eglChooseConfig: /usr/lib/libSDL2-2.0.so.0: undefined symbol: _eglChooseConfig 1 1
+Quitting under normal circumstances and cleaning up properly.
+This log file will be overwritten on next start up.
