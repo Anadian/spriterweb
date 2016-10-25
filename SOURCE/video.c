@@ -71,7 +71,7 @@ int CreateWindow(){
 	width = mode.w;
 	height = mode.h;
 	flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
-#ifdef DESKTOP_BUILD
+#if DESKTOP_BUILD
 		if(Configuration.video.fullscreen){
 			flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
 		}else{
@@ -79,19 +79,19 @@ int CreateWindow(){
 			width = Configuration.video.width;
 			height = Configuration.video.height;
 		}
-	}	
 #endif //DESKTOP_BUILD
-	//printf("flags: %d\n", flags);
+#if MOBILE_BUILD
 	flags = 0;
+#endif //MOBILE_BUILD
 	SDL_CreateWindowAndRenderer(width, height, flags, &Window, &Renderer);
 	SDL_SetWindowPosition(Window, 0, 0);
-	Rect_type vp;
-	vp.x = (width-640)/2;
-	vp.y = (height-480)/2;
-	vp.w = 800;
-	vp.h = 600;
+//	Rect_type vp;
+//	vp.x = (width-640)/2;
+//	vp.y = (height-480)/2;
+//	vp.w = 800;
+//	vp.h = 600;
 	SDL_RenderSetLogicalSize(Renderer, 640, 480);
-	SDL_RenderSetViewport(Renderer, &vp);
+//	SDL_RenderSetViewport(Renderer, &vp);
 	//SDL_RenderSetScale(Renderer,(float)(width/640),(float)(height/480));
 	return 1;
 }
