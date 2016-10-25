@@ -10,6 +10,7 @@
 #include <lualib.h>
 
 #include "video.h"
+#include "input.h"
 #include "actions.h"
 #include "kairos.h"
 #include "unit.h"
@@ -66,6 +67,7 @@ ThreadFunction_type *LogicMain(void *arg){
 		
 		LockMutex(RenderMutex)
 		ClearRenderRects();
+		AddRenderPoint(MouseX,MouseY,colour);
 		AddRenderRect(x, y, w, h, 0, colour);
 		UnlockMutex(RenderMutex)
 		CriticalVariables.LogicFrame++;
@@ -76,6 +78,7 @@ ThreadFunction_type *LogicMain(void *arg){
 	json_array_clear(json_array);
 	json_value_free(root_value);
 	
+	ClearRenderPoints();
 	ClearRenderRects();
 	ClearColours();
 	

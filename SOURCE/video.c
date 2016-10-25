@@ -51,13 +51,48 @@ int InitVideo(){
 #if USE_SDL2
 int CreateWindow(){
 	if(Window != NULL) DestroyWindow();
+	int width, height;
 	Uint32 flags;
-	flags = 0;
-	if(Configuration.video.fullscreen) flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
-	else flags = SDL_WINDOW_RESIZABLE;
+	SDL_DisplayMode mode;
+	int i;
+	for(i = 0; i < SDL_GetNumVideoDisplays(); i++){
+		printl(5, "Display %d: %s", i, SDL_GetDisplayName(i));
+		int j;
+		for(j = 0; j < SDL_GetNumDisplayModes(i); i++){
+			SDL_GetDesktopDisplayMode(j, &mode);
+			printl(5, "Display Mode %d: %d %d %d %d", i, mode.format, mode.w, mode.h, mode.refresh_rate);
+		}
+	}
+	for(i = 0; i < SDL_GetNumVideoDrivers(); i++){
+		printl(5, "Driver %d: %s", i, SDL_GetVideoDriver(i));
+	}
+	SDL_GetDesktopDisplayMode(0, &mode);
+	printl(5,"Display: %d %d %d %d", mode.format, mode.w, mode.h, mode.refresh_rate);
+	width = mode.w;
+	height = mode.h;
+	flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
+#ifdef DESKTOP_BUILD
+		if(Configuration.video.fullscreen){
+			flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
+		}else{
+			flags = SDL_WINDOW_RESIZABLE;
+			width = Configuration.video.width;
+			height = Configuration.video.height;
+		}
+	}	
+#endif //DESKTOP_BUILD
 	//printf("flags: %d\n", flags);
-	SDL_CreateWindowAndRenderer(Configuration.video.width, Configuration.video.height, flags, &Window, &Renderer);
+	flags = 0;
+	SDL_CreateWindowAndRenderer(width, height, flags, &Window, &Renderer);
+	SDL_SetWindowPosition(Window, 0, 0);
+	Rect_type vp;
+	vp.x = (width-640)/2;
+	vp.y = (height-480)/2;
+	vp.w = 800;
+	vp.h = 600;
 	SDL_RenderSetLogicalSize(Renderer, 640, 480);
+	SDL_RenderSetViewport(Renderer, &vp);
+	//SDL_RenderSetScale(Renderer,(float)(width/640),(float)(height/480));
 	return 1;
 }
 int DestroyWindow(){
@@ -118,20 +153,24 @@ int Video(){
 	LockMutex(BlitsMutex)
 	SDL_SetRenderDrawColor(Renderer, 0, 0, 0, 255);
 	SDL_RenderClear(Renderer);
+	int ww, wh, lw, lh;
+	SDL_GetWindowSize(Window, &ww, &wh);
+	SDL_RenderGetLogicalSize(Renderer, &lw, &lh);
+	printl(5, "ww: %d wh: %d lw: %d lh: %d", ww, wh, lw, lh);
 	int i;
 	for(i = 0; i < sb_count(Blits); i++){
 		Rect_type dstrect;
-		dstrect.x = Blits[i].x;
-		dstrect.y = Blits[i].y;
-		dstrect.w = Frames[Blits[i].frame].w;
-		dstrect.h = Frames[Blits[i].frame].h;
+		dstrect.x = (int)((Blits[i].x*ww)/lw);
+		dstrect.y = (int)((Blits[i].y*wh)/lh);
+		dstrect.w = (int)((Frames[Blits[i].frame].w*ww)/lw);
+		dstrect.h = (int)((Frames[Blits[i].frame].h*wh)/lh);
 		SDL_RenderCopyEx(Renderer, Images[Blits[i].image].image, &(Frames[Blits[i].frame]), &dstrect, Blits[i].rotation*180, NULL, Blits[i].flip);
 	}
 	int x1, y1, x2, y2, colour;
 	unsigned char r, g, b, a;
 	for(i = 0; i < sb_count(RenderPoints); i++){
-		x1 = RenderPoints[i].point.x;
-		y1 = RenderPoints[i].point.y;
+		x1 = (int)((RenderPoints[i].point.x*ww)/lw);
+		y1 = (int)((RenderPoints[i].point.y*wh)/lh);
 		colour = RenderPoints[i].colour;
 		r = Colours[colour].r;
 		g = Colours[colour].g;
@@ -141,10 +180,10 @@ int Video(){
 		SDL_RenderDrawPoint(Renderer, x1, y1);
 	}
 	for(i = 0; i < sb_count(RenderLines); i++){
-		x1 = RenderLines[i].point1.x;
-		y1 = RenderLines[i].point1.y;
-		x2 = RenderLines[i].point2.x;
-		y2 = RenderLines[i].point2.y;
+		x1 = (int)((RenderLines[i].point1.x*ww)/lw);
+		y1 = (int)((RenderLines[i].point1.y*wh)/lh);
+		x2 = (int)((RenderLines[i].point2.x*ww)/lw);
+		y2 = (int)((RenderLines[i].point2.y*wh)/lh);
 		colour = RenderLines[i].colour;
 		r = Colours[colour].r;
 		g = Colours[colour].g;
@@ -159,9 +198,14 @@ int Video(){
 		g = Colours[colour].g;
 		b = Colours[colour].b;
 		a = Colours[colour].a;
+		Rect_type dstrect;
+		dstrect.x = (int)((RenderRects[i].rect.x*ww)/lw);
+		dstrect.y = (int)((RenderRects[i].rect.y*wh)/lh);
+		dstrect.w = (int)((RenderRects[i].rect.w*ww)/lw);
+		dstrect.h = (int)((RenderRects[i].rect.h*wh)/lh);
 		SDL_SetRenderDrawColor(Renderer, r, g, b, a);
-		SDL_RenderDrawRect(Renderer, &(RenderRects[i].rect));
-		if(RenderRects[i].filled == 1) SDL_RenderFillRect(Renderer, &(RenderRects[i].rect));
+		SDL_RenderDrawRect(Renderer, &dstrect);
+		if(RenderRects[i].filled == 1) SDL_RenderFillRect(Renderer, &dstrect);
 	}
 	SDL_RenderPresent(Renderer);
 	UnlockMutex(RenderMutex)
@@ -315,7 +359,7 @@ int ClearColours(){
 	}
 	return 0;
 }
-int AddPoint(int x, int y, int colour){
+int AddRenderPoint(int x, int y, int colour){
 	RenderPoint_type Point;
 	Point.point.x = x;
 	Point.point.y = y;

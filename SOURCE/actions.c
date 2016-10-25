@@ -110,10 +110,10 @@ int CreateNewActions(char *actionsfilename){
 	sprintf(buffer, ";%s\n", actionsfilename);
 	fputs(buffer, actionsfile);
 	fputs("[Up]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K26+0", "M0", "J0A12");
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K26+0", "M0B0", "J0A12");
 	fputs(buffer, actionsfile);
 	fputs("[Down]\n", actionsfile);
-	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K22+0", "M1", "J0B14");
+	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K22+0", "M0B1", "J0B14");
 	fputs(buffer, actionsfile);
 	fputs("[Left]\n", actionsfile);
 	sprintf(buffer, "primary=%s\nsecondary=%s\ntertiary=%s\n", "K4+0", "\0", "J0B15");

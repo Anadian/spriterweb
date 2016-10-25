@@ -70,8 +70,6 @@ int InitInput(){
 		Joystick.id = SDL_JoystickInstanceID(Joystick.joystick);
 		sb_push(Joysticks,Joystick);
 	}
-	MouseX = 0;
-	MouseY = 0;
 #endif //USE_SDL2
 
 #if USE_GLFW3
@@ -98,10 +96,6 @@ int InitInput(){
 int Input(){
 #if USE_SDL2
 	InputEvent_type InputEvent;
-	int ww, wh, lw, lh;
-	SDL_GetWindowSize(Window, &ww, &wh);
-	SDL_RenderGetLogicalSize(Renderer, &lw, &lh);
-	printl(5, "Input %d %d %d %d", ww, wh, lw, lh);
 	while(SDL_PollEvent(&Event)){
 		printl(5, "EventMatch returned %d", EventMatch(Event,PreviousEvent));
 		if( !EventMatch(Event, PreviousEvent) ){
@@ -111,7 +105,7 @@ int Input(){
 					CriticalVariables.AppRunning = 0;
 					break;
 				case SDL_KEYDOWN:
-					InputEvent.type = KeyboardEvent;
+					InputEvent.type = 1;
 					InputEvent.value = 1;
 					sprintf(InputEvent.code, "K%d+%d", Event.key.keysym.scancode, Event.key.keysym.mod);
 					InputEvent.time = Event.key.timestamp;
@@ -119,7 +113,7 @@ int Input(){
 					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
 					break;
 				case SDL_KEYUP:
-					InputEvent.type = KeyboardEvent;
+					InputEvent.type = 1;
 					InputEvent.value = -1;
 					sprintf(InputEvent.code, "K%d+%d", Event.key.keysym.scancode, Event.key.keysym.mod);
 					InputEvent.time = Event.key.timestamp;
@@ -128,38 +122,31 @@ int Input(){
 					break;
 				case SDL_MOUSEMOTION:
 					InputEvent.type = MouseMotionEvent;
-					InputEvent.value = 0;
-					sprintf(InputEvent.code, "M%d", Event.motion.which);
-					MouseX = (int)((Event.motion.x*lw)/ww);
-					MouseY = (int)((Event.motion.y*lh)/wh);
-					InputEvent.x = (int)((Event.motion.xrel*lw)/ww);
-					InputEvent.y = (int)((Event.motion.yrel*lh)/wh);
-					InputEvent.time = Event.motion.timestamp;
-					sb_push(InputEvents,InputEvent);
-					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
-				case SDL_MOUSEBUTTONDOWN:
-					InputEvent.type = MouseButtonEvent;
 					InputEvent.value = 1;
-					sprintf(InputEvent.code, "M%dB%d", Event.button.which, Event.button.button);
-					MouseX = (int)((Event.button.x*lw)/ww);
-					MouseY = (int)((Event.button.y*lh)/wh);
+					sprintf(InputEvent.code, "M%d", Event.motion.which);
+					
+					InputEvent.x = (float)(Event.motion.xrel);
+					InputEvent.y = (float)(Event.motion.yrel);
+					InputEvent.time = Event.motion.timestamp;
+				case SDL_MOUSEBUTTONDOWN:
+					InputEvent.type = 5;
+					InputEvent.value = 1;
+					sprintf(InputEvent.code, "M%d", Event.button.button);
 					InputEvent.time = Event.button.timestamp;
 					sb_push(InputEvents,InputEvent);
 					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
 					break;
 					
 				case SDL_MOUSEBUTTONUP:
-					InputEvent.type = MouseButtonEvent;
+					InputEvent.type = 5;
 					InputEvent.value = -1;
-					sprintf(InputEvent.code, "M%dB%d", Event.button.which, Event.button.button);
-					MouseX = (int)((Event.button.x*lw)/ww);
-					MouseY = (int)((Event.button.y*lh)/wh);
+					sprintf(InputEvent.code, "M%d", Event.button.button);
 					InputEvent.time = Event.button.timestamp;
 					sb_push(InputEvents,InputEvent);
 					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
 					break;
 				case SDL_JOYBUTTONDOWN:
-					InputEvent.type = JoystickButtonEvent;
+					InputEvent.type = 4;
 					InputEvent.value = 1;
 					sprintf(InputEvent.code, "J%dB%d", Event.jbutton.which, Event.jbutton.button);
 					InputEvent.time = Event.jbutton.timestamp;
@@ -168,7 +155,7 @@ int Input(){
 					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
 					break;
 				case SDL_JOYBUTTONUP:
-					InputEvent.type = JoystickButtonEvent;
+					InputEvent.type = 4;
 					InputEvent.value = -1;
 					sprintf( InputEvent.code, "J%dB%d", Event.jbutton.which, Event.jbutton.button);
 					InputEvent.time = Event.jbutton.timestamp;
@@ -177,7 +164,7 @@ int Input(){
 					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
 					break;
 				case SDL_JOYAXISMOTION:
-					InputEvent.type = JoystickAxisEvent;
+					InputEvent.type = 2;
 					InputEvent.value = Event.jaxis.value;
 					sprintf(InputEvent.code, "J%dA%d", Event.jaxis.which, Event.jaxis.axis);
 					InputEvent.time = Event.jaxis.timestamp;
@@ -185,45 +172,25 @@ int Input(){
 					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
 					break;
 				case SDL_JOYHATMOTION:
-					InputEvent.type = JoystickHatEvent;
+					InputEvent.type = 3;
 					InputEvent.value = Event.jhat.value;
 					sprintf(InputEvent.code, "J%dH%d", Event.jhat.which, Event.jhat.hat);
 					InputEvent.time = Event.jhat.timestamp;
 					sb_push(InputEvents,InputEvent);
 					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
 					break;
-				case SDL_FINGERMOTION:
-					InputEvent.type = TouchEvent;
-					InputEvent.value = 0;
-					sprintf(InputEvent.code, "T%d", Event.tfinger.touchId);
-					MouseX = (int)((Event.tfinger.x*lw)/ww);
-					MouseY = (int)((Event.tfinger.y*lh)/wh);
-					InputEvent.x = (int)((Event.tfinger.dx*lw)/ww);
-					InputEvent.y = (int)((Event.tfinger.dy*lh)/wh);
-					InputEvent.time = Event.tfinger.timestamp;
-					sb_push(InputEvents,InputEvent);
-					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
-
 				case SDL_FINGERDOWN:
-					InputEvent.type = TouchEvent;
+					InputEvent.type = 6;
 					InputEvent.value = 1;
-					sprintf(InputEvent.code, "T%d", Event.tfinger.touchId);
-					MouseX = (int)((Event.tfinger.x*lw)/ww);
-					MouseY = (int)((Event.tfinger.y*lh)/wh);
-					InputEvent.x = (int)((Event.tfinger.dx*lw)/ww);
-					InputEvent.y = (int)((Event.tfinger.dy*lh)/wh);
+					sprintf(InputEvent.code, "T%d", Event.tfinger.fingerId);
 					InputEvent.time = Event.tfinger.timestamp;
 					sb_push(InputEvents,InputEvent);
 					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));
 					break;
 				case SDL_FINGERUP:
-					InputEvent.type = TouchEvent;
+					InputEvent.type = 6;
 					InputEvent.value = -1;
-					sprintf(InputEvent.code, "T%d", Event.tfinger.touchId);
-					MouseX = (int)((Event.tfinger.x*lw)/ww);
-					MouseY = (int)((Event.tfinger.y*lh)/wh);
-					InputEvent.x = (int)((Event.tfinger.dx*lw)/ww);
-					InputEvent.y = (int)((Event.tfinger.dy*lh)/wh);
+					sprintf(InputEvent.code, "T%d", Event.tfinger.fingerId, Event.tfinger.x, Event.tfinger.y);
 					InputEvent.time = Event.tfinger.timestamp;
 					sb_push(InputEvents,InputEvent);
 					printl(4, "Added event %s with value %f at %d to %d", InputEvent.code, InputEvent.value, InputEvent.time, sb_count(InputEvents));

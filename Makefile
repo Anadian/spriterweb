@@ -2,6 +2,7 @@ NAME=spriterweb
 ifeq ($(shell uname -s),Darwin)
 $(info Building for Mac OSX)
 PLATFORM=MacOSX
+CC=clang
 else ifeq ($(shell uname -o),Android)
 $(info Building for Android)
 PLATFORM=Android
@@ -16,7 +17,7 @@ else
 $(info Platform unkown; using defaults)
 PLATFORM=Unkown
 endif
-CC?=clang
+$(info Using $(CC))
 SOURCEDIR=./SOURCE
 SOURCE=$(wildcard $(SOURCEDIR)/*.c)
 OBJECTSDIR=./OBJECTS
