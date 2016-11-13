@@ -24,6 +24,19 @@ GLFWwindow *window;
 int InitVideo(){
 	
 #if USE_SDL2
+	SDL_DisplayMode mode;
+	int i;
+	for(i = 0; i < SDL_GetNumVideoDisplays(); i++){
+		printl(5, "Display %d: %s", i, SDL_GetDisplayName(i));
+		int j;
+		for(j = 0; j < SDL_GetNumDisplayModes(i); i++){
+			SDL_GetDesktopDisplayMode(j, &mode);
+			printl(5, "Display Mode %d: %d %d %d %d", i, mode.format, mode.w, mode.h, mode.refresh_rate);
+		}
+	}
+	for(i = 0; i < SDL_GetNumVideoDrivers(); i++){
+		printl(5, "Driver %d: %s", i, SDL_GetVideoDriver(i));
+	}
 	CreateWindow();
 #if USE_SDL_TTF
 	printl(5, "%s: NULL | %s %s", __func__, SDL_GetError(), TTF_GetError());
@@ -54,24 +67,12 @@ int CreateWindow(){
 	int width, height;
 	Uint32 flags;
 	SDL_DisplayMode mode;
-	int i;
-	for(i = 0; i < SDL_GetNumVideoDisplays(); i++){
-		printl(5, "Display %d: %s", i, SDL_GetDisplayName(i));
-		int j;
-		for(j = 0; j < SDL_GetNumDisplayModes(i); i++){
-			SDL_GetDesktopDisplayMode(j, &mode);
-			printl(5, "Display Mode %d: %d %d %d %d", i, mode.format, mode.w, mode.h, mode.refresh_rate);
-		}
-	}
-	for(i = 0; i < SDL_GetNumVideoDrivers(); i++){
-		printl(5, "Driver %d: %s", i, SDL_GetVideoDriver(i));
-	}
 	SDL_GetDesktopDisplayMode(0, &mode);
 	printl(5,"Display: %d %d %d %d", mode.format, mode.w, mode.h, mode.refresh_rate);
 	width = mode.w;
 	height = mode.h;
 	flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
-#if DESKTOP_BUILD
+#if __ARC__ == x86_64 
 		if(Configuration.video.fullscreen){
 			flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
 		}else{
@@ -79,12 +80,10 @@ int CreateWindow(){
 			width = Configuration.video.width;
 			height = Configuration.video.height;
 		}
-#endif //DESKTOP_BUILD
-#if MOBILE_BUILD
+#else 
 	flags = 0;
-#endif //MOBILE_BUILD
+#endif //__ARC__
 	SDL_CreateWindowAndRenderer(width, height, flags, &Window, &Renderer);
-	SDL_SetWindowPosition(Window, 0, 0);
 //	Rect_type vp;
 //	vp.x = (width-640)/2;
 //	vp.y = (height-480)/2;
