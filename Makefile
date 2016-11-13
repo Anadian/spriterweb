@@ -33,7 +33,7 @@ $(shell mkdir $(BINDIR))
 endif
 BIN=$(BINDIR)/$(NAME).$(PLATFORM)
 
-BASEFLAGS=-L./LIB -Wl,-llua
+BASEFLAGS=-L./LIB -L/usr/lib/x86_64-linux-gnu
 INCLUDES=-I$(INCLUDEDIR)
 
 ifeq ($(BACKEND),)
@@ -55,11 +55,11 @@ endif
 else ifeq ($(PLATFORM),Linux)
 ifeq ($(BACKEND),SDL2)
 $(info Using SDL2)
-MOREFLAGS=$(BASEFLAGS),-lSDL2,-lSDL2_image,-lSDL2_ttf,-lm
+MOREFLAGS=$(BASEFLAGS) -lSDL2 -lSDL2_image -lSDL2_ttf -lm
 endif
 endif
 
-ifeq ($(VERBOSE),on)
+ifeq ($(VERBOSE),1)
 FINALFLAGS=$(MOREFLAGS) -v
 else
 FINALFLAGS=$(MOREFLAGS)
@@ -68,7 +68,7 @@ endif
 %.o:
 	$(CC) $(INCLUDES) -c $(SOURCEDIR)/$(subst .o,.c,$(notdir $@)) -o $@
 all: $(OBJECTS)
-	$(CC) $(FINALFLAGS) $^ -o $(BIN)
+	$(CC) $^ $(FINALFLAGS) -o $(BIN)
 library: $(OBJECTS)
 	$(CC) $^ -o lib$(NAME).o
 	ar -r lib$(NAME).a lib$(NAME).o

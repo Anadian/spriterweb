@@ -3,6 +3,7 @@
 #ifndef BUILD_H
 #define BUILD_H
 
+#define USE_LUA 0
 #define USE_SDL2 1
 #define USE_GLFW3 0
 #define USE_TIGR 0
@@ -53,7 +54,7 @@ typedef double f64;
 #elif __m68k__
 #define __ARC__ Motorola68k
 #elif __arm__
-#define __ARC__ arm
+#define __ARC__ ARM
 #define __BIT__ 32
 #endif
 
@@ -70,4 +71,6 @@ typedef double f64;
 #define USE_SDL_TTF 1
 #endif //USE_SDL2
 
+#define DESKTOP_BUILD 1
+#define MOBILE_BUILD 0
 #endif

@@ -71,8 +71,13 @@ int CreateWindow(){
 	printl(5,"Display: %d %d %d %d", mode.format, mode.w, mode.h, mode.refresh_rate);
 	width = mode.w;
 	height = mode.h;
+<<<<<<< HEAD
 	flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
 #if __ARC__ == x86_64 
+=======
+	flags = 0;
+#if DESKTOP_BUILD
+>>>>>>> f25dfad967d3cbe59a8191a6ebdde38b6879246d
 		if(Configuration.video.fullscreen){
 			flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
 		}else{
@@ -80,10 +85,20 @@ int CreateWindow(){
 			width = Configuration.video.width;
 			height = Configuration.video.height;
 		}
+<<<<<<< HEAD
 #else 
 	flags = 0;
 #endif //__ARC__
 	SDL_CreateWindowAndRenderer(width, height, flags, &Window, &Renderer);
+=======
+#endif //DESKTOP_BUILD
+#if MOBILE_BUILD
+
+#endif //MOBILE_BUILD
+	SDL_CreateWindowAndRenderer(width, height, flags, &Window, &Renderer);
+	printl(5,"w: %d h: %d f: %d", width, height, flags);
+	//SDL_SetWindowPosition(Window, 0, 0);
+>>>>>>> f25dfad967d3cbe59a8191a6ebdde38b6879246d
 //	Rect_type vp;
 //	vp.x = (width-640)/2;
 //	vp.y = (height-480)/2;
