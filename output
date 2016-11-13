@@ -1,0 +1,21 @@
+Building for Linux
+Using gcc
+No backend specified; using SDL2 by default
+Using SDL2
+rm -rf ./OBJECTS
+mkdir ./OBJECTS
+gcc -I./INCLUDE -c ./SOURCE/actions.c -o OBJECTS/actions.o
+gcc -I./INCLUDE -c ./SOURCE/logic_main.c -o OBJECTS/logic_main.o
+gcc -I./INCLUDE -c ./SOURCE/video.c -o OBJECTS/video.o
+gcc -I./INCLUDE -c ./SOURCE/unit.c -o OBJECTS/unit.o
+gcc -I./INCLUDE -c ./SOURCE/middleware.c -o OBJECTS/middleware.o
+gcc -I./INCLUDE -c ./SOURCE/ini.c -o OBJECTS/ini.o
+gcc -I./INCLUDE -c ./SOURCE/parson.c -o OBJECTS/parson.o
+gcc -I./INCLUDE -c ./SOURCE/kairos.c -o OBJECTS/kairos.o
+gcc -I./INCLUDE -c ./SOURCE/delog.c -o OBJECTS/delog.o
+gcc -I./INCLUDE -c ./SOURCE/menu.c -o OBJECTS/menu.o
+gcc -I./INCLUDE -c ./SOURCE/main.c -o OBJECTS/main.o
+gcc -I./INCLUDE -c ./SOURCE/configuration.c -o OBJECTS/configuration.o
+gcc -I./INCLUDE -c ./SOURCE/input.c -o OBJECTS/input.o
+gcc -L./LIB -L/usr/lib/x86_64-linux-gnu -lSDL2 -lSDL2_image -lSDL2_ttf -lm -v OBJECTS/actions.o OBJECTS/logic_main.o OBJECTS/video.o OBJECTS/unit.o OBJECTS/middleware.o OBJECTS/ini.o OBJECTS/parson.o OBJECTS/kairos.o OBJECTS/delog.o OBJECTS/menu.o OBJECTS/main.o OBJECTS/configuration.o OBJECTS/input.o -o ./BIN/spriterweb.Linux
+Makefile:71: recipe for target 'all' failed

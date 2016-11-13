@@ -5,9 +5,11 @@
 #include <stdio.h> //printf
 #include "delog.h"
 
+#if USE_LUA
 #include <lua.h>
 #include <lauxlib.h>
 #include <lualib.h>
+#endif //USE_LUA
 
 #include "video.h"
 #include "input.h"
@@ -20,7 +22,7 @@ ThreadFunction_type *LogicMain(void *arg){
 	CriticalVariables.LogicThread = 1;
 	
 	//Init Lua
-	char buffer[256];
+	/*char buffer[256];
 	lua_State *L = luaL_newstate();
 	double *version;
 	//version = lua_version(L);
@@ -29,7 +31,7 @@ ThreadFunction_type *LogicMain(void *arg){
 	
 	printl(5, "Lual_loadfile: %d %d %d %d", luaL_loadfile(L, "./SCRIPT/init.lua"), LUA_ERRSYNTAX, LUA_ERRMEM, LUA_ERRFILE);
 	printl(5, "Lual_pcall: %d", lua_pcall(L, 0, 0, 0));
-	//luaL_loadfile(L, "./SCRIPT/main.lua");
+	//luaL_loadfile(L, "./SCRIPT/main.lua");*/
 	int colour;
 	colour = AddColour(255,0,0,0);
 	int x, y, w, h;
@@ -82,8 +84,8 @@ ThreadFunction_type *LogicMain(void *arg){
 	ClearRenderRects();
 	ClearColours();
 	
-	luaL_dofile(L, "./SCRIPT/quit.lua");
-	lua_close(L);
+	/*luaL_dofile(L, "./SCRIPT/quit.lua");
+	lua_close(L);*/
 	
 	CriticalVariables.LogicThread = 2;
 	printl(5,"Logic thread teminated");

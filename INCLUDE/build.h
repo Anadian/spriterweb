@@ -3,6 +3,7 @@
 #ifndef BUILD_H
 #define BUILD_H
 
+#define USE_LUA 0
 #define USE_SDL2 1
 #define USE_GLFW3 0
 #define USE_TIGR 0
@@ -70,4 +71,5 @@ typedef double f64;
 #define USE_SDL_TTF 1
 #endif //USE_SDL2
 
+#define DESKTOP_BUILD 1
 #endif
