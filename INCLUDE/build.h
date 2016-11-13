@@ -54,7 +54,7 @@ typedef double f64;
 #elif __m68k__
 #define __ARC__ Motorola68k
 #elif __arm__
-#define __ARC__ arm
+#define __ARC__ ARM
 #define __BIT__ 32
 #endif
 
@@ -72,4 +72,5 @@ typedef double f64;
 #endif //USE_SDL2
 
 #define DESKTOP_BUILD 1
+#define MOBILE_BUILD 0
 #endif
