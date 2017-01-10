@@ -34,25 +34,35 @@ cno_s8_type CNO_Options_GetOpt(int argc, char *argv[]){
 	char c;
 	int long_option_index;
 	long_option_index = 0;
-	while( ((c = getopt_long(argc,argv,"Vhv::c:a:", long_options, &long_option_index)) != -1) && (c != 255)){
+	while( ((c = getopt_long(argc,argv,"Vhv::c:a:", CNO_Options, &long_option_index)) != -1) && (c != 255)){
+	
 #if CNO_ALLOW_PRINTF
+
 		printf("%d: %c \n", long_option_index, c);
+		
 #endif //CNO_ALLOW_PRINTF
+
 		switch(c){
 			case 'V':
+			
 #if CNO_ALLOW_PRINTF
+
 				printf("\n");
+				
 #endif //CNO_ALLOW_PRINTF
+
 #if CNO_ALLOW_EXIT
+
 				exit(EXIT_SUCCESS);
+				
 #endif //CNO_ALLOW_EXIT
 				break;
 			case 'h':
 #if CNO_ALLOW_PRINTF
-				printf("Basic Usage:\n\t %s [OPTIONS]\nOptions:\t Note: (argument) means the argument(s) is/are optional while [argument] means the option is required.\n", CNO_BUILD_NAME);
+				printf("Basic Usage:\n\t %s [OPTIONS]\nOptions:\t Note: (argument) means the argument(s) is/are optional while [argument] means the argument is required.\n", CNO_BUILD_NAME);
 				int i;
 				for(i = 0; i < Number_of_CNO_Options; i++){
-					printf("\t%c %s %s: %s\n", long_options[i].val, long_options[i].name, CNO_Options_Plus[i].hint, CNO_Options_Plus[i].description);
+					printf("\t%c %s %s: %s\n", CNO_Options[i][3], CNO_Options[i][0], CNO_Options_Plus[i].hint, CNO_Options_Plus[i].description);
 				}
 #endif //CNO_ALLOW_PRINTF
 #if CNO_ALLOW_EXIT
@@ -73,7 +83,7 @@ cno_s8_type CNO_Options_GetOpt(int argc, char *argv[]){
 #endif //CNO_ALLOW_EXIT
 				} else{
 					CNO_Options_Plus[CNO_Option_Config].flag = 1;
-					CNO_Options_Argument_Confg = optarg;
+					CNO_Options_Argument_Config = optarg;
 				}
 				break;
 			case 'a':
@@ -91,6 +101,6 @@ cno_s8_type CNO_Options_GetOpt(int argc, char *argv[]){
 				break;
 		}
 	}
+#endif //CNO_HAVE_STRING && CNO_HAVE_GETOPT
 	return 0;
 }
-#endif //CNO_HAVE_GETOPT

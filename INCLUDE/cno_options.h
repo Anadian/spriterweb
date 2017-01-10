@@ -36,7 +36,9 @@ typedef struct CNO_Option_Plus_struct{
 	cno_u8_type hint[8];
 	cno_u8_type description[512];
 } CNO_Option_Plus_type;
+
 CNO_Option_Plus_type CNO_Options_Plus[Number_of_CNO_Options];
+
 #endif //CNO_HAVE_GETOPT
 
 cno_s8_type CNO_Options_GetOpt(int argc, char *argv[]);

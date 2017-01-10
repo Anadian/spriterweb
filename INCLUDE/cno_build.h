@@ -31,7 +31,7 @@
 #define CNO_ARCHITECTURE "Motorola68k"
 #elif __arm__
 #define CNO_ARCHITECTURE "ARM"
-#define __BIT__ 32
+#define CNO_CPU_BIT_TYPE 32
 #endif
 
 #define CNO_BUILD_FOR_BINARY 1
@@ -64,20 +64,28 @@ typedef double cno_f64_type;
 
 //OS
 #ifdef __APPLE__
-#define CNO_OS "MacOSX"
+#define CNO_OS_NAME "MacOSX"
+#define CNO_OS 2
 #elif __gnu_linux__
-#define CNO_OS "Linux"
+#define CNO_OS_NAME "Linux"
+#define CNO_OS 3
 #elif __CYGWIN__ || __WIN32
-#define CNO_OS "Windows"
+#define CNO_OS_NAME "Windows"
+#define CNO_OS 1
+#else
+#define CNO_OS_NAME "Unknown"
+#define CNO_OS 4
 #endif
 
 //Static Dependencies
 #define CNO_HAVE_STDIO 1
 #define CNO_HAVE_STDLIB 1
 #define CNO_HAVE_STRING 1
+#define CNO_HAVE_TIME 1
 #define CNO_HAVE_UNISTD 1
 #define CNO_HAVE_GETOPT 1
 #define CNO_HAVE_INIH 1
+#define CNO_HAVE_WHEREAMI 1
 #define CNO_HAVE_STRETCHYBUFFER 1
 #define CNO_HAVE_PARSON 1
 #define CNO_HAVE_SDL2 1
@@ -101,5 +109,11 @@ typedef double cno_f64_type;
 
 #define DESKTOP_BUILD 1
 #define MOBILE_BUILD 0
+
+#if DESKTOP_BUILD && !MOBILE_BUILD
+#define CNO_DEVICE_TYPE 1
+#elif MOBILE_BUILD && !DESKTOP_BUILD
+#define CNO_DEVICE_TYPE 2
+#endif //DESKTOP_BUILD && MOBILE_BUILD
 
 #endif //CNO_BUILD_H
